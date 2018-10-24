@@ -5,7 +5,7 @@ Subject: browser_plugin_wheel.patch
 
 
 diff --git a/content/renderer/browser_plugin/browser_plugin.cc b/content/renderer/browser_plugin/browser_plugin.cc
-index 4d8251069ae9a45e1be22fa03f23b3196116b612..fbd5cc8099629971d670d087fdee89204e3137e3 100644
+index 963702e3c033f64aad15882ed694049f1a3ce0b2..1a1cc801734516cf3b1505e417bea479fc358614 100644
 --- a/content/renderer/browser_plugin/browser_plugin.cc
 +++ b/content/renderer/browser_plugin/browser_plugin.cc
 @@ -656,15 +656,11 @@ blink::WebInputEventResult BrowserPlugin::HandleInputEvent(
@@ -30,5 +30,5 @@ index 4d8251069ae9a45e1be22fa03f23b3196116b612..fbd5cc8099629971d670d087fdee8920
    if (blink::WebInputEvent::IsGestureEventType(event.GetType())) {
      auto gesture_event = static_cast<const blink::WebGestureEvent&>(event);
 -- 
-2.17.0
+2.16.2
 

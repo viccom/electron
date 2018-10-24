@@ -38,7 +38,7 @@ index 44c85b5ad571c39c4580cb9d0cdf08f694c1dfb4..1714c403edf21092e43192f25cf0c19f
  // is concerned.
  @property(nonatomic, readonly) NSString* subrole;
 diff --git a/content/browser/accessibility/browser_accessibility_cocoa.mm b/content/browser/accessibility/browser_accessibility_cocoa.mm
-index 07e9862b76a920438a779f22d67d3a45ab39abf7..efa52aa9de2f819f28109978c8cef518325ef70a 100644
+index 3e3c05edbdac6df9ab2ca5811dd4830d43e95b7d..cacbefe9a8496cdadf516f070676c46579bf3399 100644
 --- a/content/browser/accessibility/browser_accessibility_cocoa.mm
 +++ b/content/browser/accessibility/browser_accessibility_cocoa.mm
 @@ -135,6 +135,7 @@ NSDictionary* attributeToMethodNameMap = nil;
@@ -101,7 +101,7 @@ index 07e9862b76a920438a779f22d67d3a45ab39abf7..efa52aa9de2f819f28109978c8cef518
  
  - (NSNumber*)expanded {
    if (![self instanceActive])
-@@ -2029,6 +2039,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
+@@ -2032,6 +2042,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
    return [NSValue valueWithRange:NSMakeRange(selStart, selLength)];
  }
  
@@ -109,7 +109,7 @@ index 07e9862b76a920438a779f22d67d3a45ab39abf7..efa52aa9de2f819f28109978c8cef518
  - (id)selectedTextMarkerRange {
    if (![self instanceActive])
      return nil;
-@@ -2061,6 +2072,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
+@@ -2064,6 +2075,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
                                                 anchorAffinity, *focusObject,
                                                 focusOffset, focusAffinity));
  }
@@ -117,7 +117,7 @@ index 07e9862b76a920438a779f22d67d3a45ab39abf7..efa52aa9de2f819f28109978c8cef518
  
  - (NSValue*)size {
    if (![self instanceActive])
-@@ -2093,6 +2105,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
+@@ -2096,6 +2108,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
    return nil;
  }
  
@@ -125,7 +125,7 @@ index 07e9862b76a920438a779f22d67d3a45ab39abf7..efa52aa9de2f819f28109978c8cef518
  // Returns a text marker that points to the first character in the document that
  // can be selected with VoiceOver.
  - (id)startTextMarker {
-@@ -2103,6 +2116,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
+@@ -2106,6 +2119,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
    BrowserAccessibilityPositionInstance position = root->CreatePositionAt(0);
    return CreateTextMarker(position->CreatePositionAtStartOfAnchor());
  }
@@ -133,7 +133,7 @@ index 07e9862b76a920438a779f22d67d3a45ab39abf7..efa52aa9de2f819f28109978c8cef518
  
  // Returns a subrole based upon the role.
  - (NSString*) subrole {
-@@ -2405,12 +2419,14 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
+@@ -2411,12 +2425,14 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
    NSMutableAttributedString* attributedValue =
        [[[NSMutableAttributedString alloc] initWithString:value] autorelease];
  
@@ -148,7 +148,7 @@ index 07e9862b76a920438a779f22d67d3a45ab39abf7..efa52aa9de2f819f28109978c8cef518
  
    return [attributedValue attributedSubstringFromRange:range];
  }
-@@ -2527,6 +2543,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
+@@ -2533,6 +2549,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
      return nil;
    }
  
@@ -156,7 +156,7 @@ index 07e9862b76a920438a779f22d67d3a45ab39abf7..efa52aa9de2f819f28109978c8cef518
    if ([attribute isEqualToString:@"AXUIElementForTextMarker"]) {
      BrowserAccessibilityPositionInstance position =
          CreatePositionFromTextMarker(parameter);
-@@ -2704,6 +2721,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
+@@ -2710,6 +2727,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
      NSString* text = GetTextForTextMarkerRange(parameter);
      return [NSNumber numberWithInt:[text length]];
    }
@@ -164,7 +164,7 @@ index 07e9862b76a920438a779f22d67d3a45ab39abf7..efa52aa9de2f819f28109978c8cef518
  
    if ([attribute isEqualToString:
        NSAccessibilityBoundsForRangeParameterizedAttribute]) {
-@@ -2741,6 +2759,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
+@@ -2747,6 +2765,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
      return nil;
    }
  
@@ -172,7 +172,7 @@ index 07e9862b76a920438a779f22d67d3a45ab39abf7..efa52aa9de2f819f28109978c8cef518
    if ([attribute isEqualToString:
             NSAccessibilityLineTextMarkerRangeForTextMarkerParameterizedAttribute]) {
      BrowserAccessibilityPositionInstance position =
-@@ -2820,6 +2839,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
+@@ -2826,6 +2845,7 @@ NSString* const NSAccessibilityRequiredAttributeChrome = @"AXRequired";
  
      return @(child->GetIndexInParent());
    }
@@ -201,26 +201,23 @@ index 8e32a08226079c6d7515b8e784babacb3226ecd6..93bb7273684fa529bdc6049af2ed379f
    }
  
 diff --git a/content/renderer/renderer_main_platform_delegate_mac.mm b/content/renderer/renderer_main_platform_delegate_mac.mm
-index 1e2cc38d3868ceccf8e45f5f82f57bcaa478f982..daa934c345e2686fd2174b7721d0f69a2d094692 100644
+index e2122fb5fe931c911f92e709d1a643cd575972f3..da6847eea755a0b564fcd7daa36c4badc014c7f3 100644
 --- a/content/renderer/renderer_main_platform_delegate_mac.mm
 +++ b/content/renderer/renderer_main_platform_delegate_mac.mm
-@@ -22,6 +22,7 @@
- #include "sandbox/mac/seatbelt.h"
+@@ -23,10 +23,12 @@
+ #include "sandbox/mac/system_services.h"
  #include "services/service_manager/sandbox/mac/sandbox_mac.h"
  
 +#ifndef MAS_BUILD
  extern "C" {
  void CGSSetDenyWindowServerConnections(bool);
  void CGSShutdownServerConnections();
-@@ -30,6 +31,7 @@ void _LSSetApplicationLaunchServicesServerConnectionStatus(
-     uint64_t flags,
-     bool (^connection_allowed)(CFDictionaryRef));
  };
 +#endif
  
  namespace content {
  
-@@ -38,6 +40,7 @@ namespace {
+@@ -35,6 +37,7 @@ namespace {
  // This disconnects from the window server, and then indicates that Chrome
  // should continue execution without access to launchservicesd.
  void DisconnectWindowServer() {
@@ -228,16 +225,16 @@ index 1e2cc38d3868ceccf8e45f5f82f57bcaa478f982..daa934c345e2686fd2174b7721d0f69a
    // Now disconnect from WindowServer, after all objects have been warmed up.
    // Shutting down the connection requires connecting to WindowServer,
    // so do this before actually engaging the sandbox. This may cause two log
-@@ -54,6 +57,7 @@ void DisconnectWindowServer() {
-       0, ^bool(CFDictionaryRef options) {
-         return false;
-       });
+@@ -43,6 +46,7 @@ void DisconnectWindowServer() {
+   CGSShutdownServerConnections();
+ 
+   sandbox::DisableLaunchServices();
 +#endif
  }
  
  // You are about to read a pretty disgusting hack. In a static initializer,
 diff --git a/device/bluetooth/bluetooth_adapter_mac.mm b/device/bluetooth/bluetooth_adapter_mac.mm
-index 8b2092ec78f9f6bc1bd4c8af21ada74538f54d29..4f2ee8e2809790df68aedcee0946263143c7e758 100644
+index 2030e0af30d331a0f7c8742a701621a519c86e38..60ba19752cb700a3eb8698f4e356fbd089e62747 100644
 --- a/device/bluetooth/bluetooth_adapter_mac.mm
 +++ b/device/bluetooth/bluetooth_adapter_mac.mm
 @@ -34,6 +34,7 @@
@@ -281,10 +278,10 @@ index 8b2092ec78f9f6bc1bd4c8af21ada74538f54d29..4f2ee8e2809790df68aedcee09462631
  
  void BluetoothAdapterMac::RemovePairingDelegateInternal(
 diff --git a/media/audio/BUILD.gn b/media/audio/BUILD.gn
-index 585ad87c6cb45d199bec8ed6e2430139546c83c2..4305c2e67dccb94a6cacd0664783906473f219e9 100644
+index 6b7eccaf55c1b81a8db03c96f9c4353716fa8eed..7011139d73253a9f6771f0be4e6c8827493a64ea 100644
 --- a/media/audio/BUILD.gn
 +++ b/media/audio/BUILD.gn
-@@ -196,6 +196,12 @@ source_set("audio") {
+@@ -202,6 +202,12 @@ source_set("audio") {
        "mac/scoped_audio_unit.cc",
        "mac/scoped_audio_unit.h",
      ]
@@ -422,26 +419,6 @@ index 9073364142e8f98c8872d9b5509f92f433e06624..2356add74dfae98299a4e2b207aa26fc
      default:
        NOTREACHED();
        return nullptr;
-diff --git a/ui/views/cocoa/bridged_native_widget.mm b/ui/views/cocoa/bridged_native_widget.mm
-index 69c5f1f44d7e39e8480319b3da02725b5cb89eea..8841b59f6b70ac4687adfde61a1fba1424e57e48 100644
---- a/ui/views/cocoa/bridged_native_widget.mm
-+++ b/ui/views/cocoa/bridged_native_widget.mm
-@@ -43,6 +43,7 @@
- #include "ui/views/widget/widget_delegate.h"
- #include "ui/views/window/dialog_delegate.h"
- 
-+#ifndef MAS_BUILD
- extern "C" {
- 
- typedef int32_t CGSConnection;
-@@ -52,6 +53,7 @@ CGError CGSSetWindowBackgroundBlurRadius(CGSConnection connection,
-                                          int radius);
- 
- }
-+#endif
- namespace {
- constexpr auto kUIPaintTimeout = base::TimeDelta::FromSeconds(5);
- }  // namespace
 -- 
-2.17.0
+2.16.2
 
