@@ -1082,43 +1082,43 @@ jobs:
 
 workflows:
   version: 2
-  build-linux:
-    jobs:
-      - linux-checkout
-
-      - linux-x64-debug:
-          requires:
-            - linux-checkout
-      - linux-x64-testing:
-          requires:
-            - linux-checkout
-      - linux-x64-testing-tests:
-          requires:
-            - linux-x64-testing
-
-      - linux-ia32-debug:
-          requires:
-            - linux-checkout
-      - linux-ia32-testing:
-          requires:
-            - linux-checkout
-      - linux-ia32-testing-tests:
-          requires:
-            - linux-ia32-testing
-
-      - linux-arm-debug:
-          requires:
-            - linux-checkout
-      - linux-arm-testing:
-          requires:
-            - linux-checkout
-
-      - linux-arm64-debug:
-          requires:
-            - linux-checkout
-      - linux-arm64-testing:
-          requires:
-            - linux-checkout
+#  build-linux:
+#    jobs:
+#      - linux-checkout
+#
+#      - linux-x64-debug:
+#          requires:
+#            - linux-checkout
+#      - linux-x64-testing:
+#          requires:
+#            - linux-checkout
+#      - linux-x64-testing-tests:
+#          requires:
+#            - linux-x64-testing
+#
+#      - linux-ia32-debug:
+#          requires:
+#            - linux-checkout
+#      - linux-ia32-testing:
+#          requires:
+#            - linux-checkout
+#      - linux-ia32-testing-tests:
+#          requires:
+#            - linux-ia32-testing
+#
+#      - linux-arm-debug:
+#          requires:
+#            - linux-checkout
+#      - linux-arm-testing:
+#          requires:
+#            - linux-checkout
+#
+#      - linux-arm64-debug:
+#          requires:
+#            - linux-checkout
+#      - linux-arm64-testing:
+#          requires:
+#            - linux-checkout
 
   build-mac-fork-prs:
     jobs:
@@ -1237,14 +1237,14 @@ workflows:
   # Various slow and non-essential checks we run only nightly.
   # Sanitizer jobs should be added here.
   linux-checks-nightly:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - master
-                - *chromium-upgrade-branches
+#    triggers:
+#      - schedule:
+#          cron: "0 0 * * *"
+#          filters:
+#            branches:
+#              only:
+#                - master
+#                - *chromium-upgrade-branches
     jobs:
       - linux-x64-checkout
 
