@@ -20,14 +20,11 @@ tests:
   - content_unittests:
       disabled:
         upstream_failures:
-          - BackgroundSyncManagerTest.Register
-          - BackgroundSyncManagerTest.RegistrationIntact
+          - BackgroundSyncManagerTest.*
           - FrameServiceBaseTest.ConnectionError
-          - MediaSessionControllerTest.NoAudioNoSession
-          - MediaSessionControllerTest.IsRemoteNoSession
+          - MediaSessionControllerTest.*
           - MediaStreamUIProxyFeaturePolicyTest.FeaturePolicy
-          - PresentationServiceImplTest.ListenForScreenAvailability
-          - PresentationServiceImplTest.ScreenAvailabilityNotSupported
+          - PresentationServiceImplTest.*
         to_fix:
           - _/DOMStorageMapParamTest.EnforcesQuota/0
           - _/DOMStorageMapParamTest.EnforcesQuota/1
@@ -48,8 +45,7 @@ tests:
         upstream_failures:
           - EndToEndTestsWithTls/EndToEndTestWithTls.SimpleRequestResponsev6/*
           - FilenameUtilTest.GenerateFileName
-          - SSLClientSocketTest.Connect
-          - SSLClientSocketTest.ConnectExpired
+          - SSLClientSocketTest.*
           - UDPSocketTest.ClientGetLocalPeerAddresses
           - UDPSocketTest.ClientSetDoNotFragment
   - ppapi_unittests
