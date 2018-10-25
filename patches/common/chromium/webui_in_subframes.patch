@@ -34,7 +34,7 @@ index 9ac81d17f614b478512e57cd68a7a87b40860a7e..fc62fb1e6b9df0ac742acda08b774d08
    // Called by |frame| to notify that it has received an update on focused
    // element. |bounds_in_root_view| is the rectangle containing the element that
 diff --git a/content/browser/frame_host/render_frame_host_impl.cc b/content/browser/frame_host/render_frame_host_impl.cc
-index 214e32db296c840e96bbae52a8672b17fad4a2cf..257758ba6b2acdb96bc6a30502dce01f96ce84e5 100644
+index 30b945c417d04106a05a0d3dcb86e5df87845c0c..f3eb67f0fc3bb11760afdd1e2eab587e0d322b5a 100644
 --- a/content/browser/frame_host/render_frame_host_impl.cc
 +++ b/content/browser/frame_host/render_frame_host_impl.cc
 @@ -27,6 +27,7 @@
@@ -45,7 +45,7 @@ index 214e32db296c840e96bbae52a8672b17fad4a2cf..257758ba6b2acdb96bc6a30502dce01f
  #include "build/build_config.h"
  #include "cc/base/switches.h"
  #include "content/browser/accessibility/browser_accessibility_manager.h"
-@@ -4377,8 +4378,23 @@ bool RenderFrameHostImpl::UpdatePendingWebUI(const GURL& dest_url,
+@@ -4382,8 +4383,23 @@ bool RenderFrameHostImpl::UpdatePendingWebUI(const GURL& dest_url,
        DCHECK(web_ui_);
        should_reuse_web_ui_ = true;
      } else {
@@ -71,7 +71,7 @@ index 214e32db296c840e96bbae52a8672b17fad4a2cf..257758ba6b2acdb96bc6a30502dce01f
        pending_web_ui_type_ = new_web_ui_type;
  
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 1805f69a5363565c2f8a94340a02f607623c8998..3ba779a42a3f534395e4e3593fb1a55ac3dfd8c8 100644
+index a9e95f9b18bbd5327536499c58362167fa01a583..6120209f61b9643171138ad4a6c14bf18fcfc2ba 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -790,6 +790,25 @@ RenderFrameHostManager* WebContentsImpl::GetRenderManagerForTesting() {
@@ -114,7 +114,7 @@ index 1805f69a5363565c2f8a94340a02f607623c8998..3ba779a42a3f534395e4e3593fb1a55a
        return true;
    }
  
-@@ -6033,8 +6053,9 @@ NavigationControllerImpl& WebContentsImpl::GetControllerForRenderManager() {
+@@ -6034,8 +6054,9 @@ NavigationControllerImpl& WebContentsImpl::GetControllerForRenderManager() {
  }
  
  std::unique_ptr<WebUIImpl> WebContentsImpl::CreateWebUIForRenderFrameHost(
@@ -141,5 +141,5 @@ index 2687e87ea2da87c09622e03f4f9afcaa649d7a3b..dffc8c9c298bb13c5341f56fb2e8d813
    void DidCallFocus() override;
    RenderFrameHost* GetFocusedFrameIncludingInnerWebContents() override;
 -- 
-2.16.2
+2.16.1
 

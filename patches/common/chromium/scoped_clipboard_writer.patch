@@ -62,5 +62,5 @@ index 385900eb67dee499afc8591e6acf0c6b5957df7e..cf1f803ec1233c173d11295be05ba085
    void WritePickledData(const base::Pickle& pickle,
                          const Clipboard::FormatType& format);
 -- 
-2.16.2
+2.16.1
 

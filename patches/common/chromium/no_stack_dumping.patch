@@ -5,10 +5,10 @@ Subject: no_stack_dumping.patch
 
 
 diff --git a/content/app/content_main_runner_impl.cc b/content/app/content_main_runner_impl.cc
-index 4caa237a5c89f9ff8d84af7dff9b850fbd89b301..9afdfe74512b943d43a3b751396316bc0da78f2a 100644
+index 61ef09f69587d68109db397aca17b2a0f89a8af6..1fecc396990b0cca40bf0c42ce107f6c4e5a01c5 100644
 --- a/content/app/content_main_runner_impl.cc
 +++ b/content/app/content_main_runner_impl.cc
-@@ -777,7 +777,7 @@ int ContentMainRunnerImpl::Initialize(const ContentMainParams& params) {
+@@ -776,7 +776,7 @@ int ContentMainRunnerImpl::Initialize(const ContentMainParams& params) {
            return nullptr;
          }));
  
@@ -18,5 +18,5 @@ index 4caa237a5c89f9ff8d84af7dff9b850fbd89b301..9afdfe74512b943d43a3b751396316bc
      bool should_enable_stack_dump = !process_type.empty();
  #else
 -- 
-2.16.2
+2.16.1
 

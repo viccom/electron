@@ -50,5 +50,5 @@ index 9b07d3bc3e50775225fafc020f6264c6b3f4cd15..8420f56040c87643365d40bd17ff6071
    void StartReload(WebFrameLoadType) override;
    void ReloadImage(const WebNode&) override;
 -- 
-2.16.2
+2.16.1
 

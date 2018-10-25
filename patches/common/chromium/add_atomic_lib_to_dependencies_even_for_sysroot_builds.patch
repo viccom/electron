@@ -5,7 +5,7 @@ Subject: add_atomic_lib_to_dependencies_even_for_sysroot_builds.patch
 
 
 diff --git a/base/BUILD.gn b/base/BUILD.gn
-index 48aa280f533ab467ae439ff2f05bfe4bc26fbf49..a479c4942ac3289ab2d31e5192c742411e270639 100644
+index c79a1e5a6ca98941bd0c600998fc1d5c41010bf5..3e8a9cc0f94362da8111c8fd3a6109ca6c13d9ca 100644
 --- a/base/BUILD.gn
 +++ b/base/BUILD.gn
 @@ -1276,7 +1276,7 @@ jumbo_component("base") {
@@ -18,5 +18,5 @@ index 48aa280f533ab467ae439ff2f05bfe4bc26fbf49..a479c4942ac3289ab2d31e5192c74241
      libs += [ "atomic" ]
    }
 -- 
-2.16.2
+2.16.1
 

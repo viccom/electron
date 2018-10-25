@@ -149,10 +149,10 @@ index d8aca9e2cbffdfd0bbb0bd67e8adfb53547132bb..86224ab7a3c5637422559da25bc8c104
    // navigation. Now we know that the renderer has updated its state accordingly
    // and it is safe to also clear the browser side history.
 diff --git a/content/browser/frame_host/render_frame_host_impl.cc b/content/browser/frame_host/render_frame_host_impl.cc
-index 5be5a5b57a6b94c8d1ee314153b187c2dd105f0f..a5ed45971659d9d6f12fe89ff46b77e268262ea6 100644
+index e67018e0f8099bbe060443425e2d7901246e900f..c5e56bc15cfbf95f7564cc4d080243c48e585f20 100644
 --- a/content/browser/frame_host/render_frame_host_impl.cc
 +++ b/content/browser/frame_host/render_frame_host_impl.cc
-@@ -2432,8 +2432,10 @@ void RenderFrameHostImpl::AllowBindings(int bindings_flags) {
+@@ -2437,8 +2437,10 @@ void RenderFrameHostImpl::AllowBindings(int bindings_flags) {
    }
  
    enabled_bindings_ |= bindings_flags;
@@ -179,10 +179,10 @@ index 3f80e73535c8b4a2bcff08821e3585306f691c8b..bf40b94ad24c0621cbe093002c335569
    }
  
 diff --git a/third_party/blink/renderer/core/dom/node.cc b/third_party/blink/renderer/core/dom/node.cc
-index f5f9135b8fdf42a47a51b930e18c162d86e9f47b..08f28b25c7f3b3f6d45c35583f227757051e9141 100644
+index 32f58a1577bc7866b257eb3a2c3344cb9d730e6c..958d9884f430119e3e448415433d1db7b2d5ea36 100644
 --- a/third_party/blink/renderer/core/dom/node.cc
 +++ b/third_party/blink/renderer/core/dom/node.cc
-@@ -2571,7 +2571,7 @@ StaticNodeList* Node::getDestinationInsertionPoints() {
+@@ -2565,7 +2565,7 @@ StaticNodeList* Node::getDestinationInsertionPoints() {
  
  HTMLSlotElement* Node::AssignedSlot() const {
    // assignedSlot doesn't need to call updateDistribution().
@@ -268,5 +268,5 @@ index 1365fcea0c49da8a68c00bb6c96fd18e39ab929a..4667339d8d5d6f6d377af7759545cfd0
  
  if (is_android) {
 -- 
-2.16.2
+2.16.1
 

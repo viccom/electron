@@ -5,7 +5,7 @@ Subject: web_contents.patch
 
 
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 49f26c7bde400d260db3d13f2a9b204704ec60dd..1805f69a5363565c2f8a94340a02f607623c8998 100644
+index 499c8c0a2e899d9c2a35be461cc8d247f42a6f17..a9e95f9b18bbd5327536499c58362167fa01a583 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -1940,6 +1940,12 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
@@ -120,5 +120,5 @@ index 786eecfcb70cd5145a29f9dc89765930739e0d63..0916329b2bf483381065476108978683
      blink::WebSandboxFlags starting_sandbox_flags;
  
 -- 
-2.16.2
+2.16.1
 

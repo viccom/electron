@@ -66,7 +66,7 @@ index 92f940ef0239b2bb3d2df3ddd2f9c33327f95031..04924fbac7ec3f5d23f85b70fa7ff61c
    return validAttributesForMarkedText_.get();
  }
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index 44ee710116e2bd0aaf81be4e8010242fd68e2619..328b58c84b9ed17dd2eb2beacd89be4d23285328 100644
+index 7e3a9aa6adc3ce0e3989279d2cc54f3dcb7eb40c..87705f669e022722f4e718532b44fad7780b1862 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
 @@ -54,6 +54,7 @@
@@ -78,5 +78,5 @@ index 44ee710116e2bd0aaf81be4e8010242fd68e2619..328b58c84b9ed17dd2eb2beacd89be4d
  using blink::WebInputEvent;
  using blink::WebMouseEvent;
 -- 
-2.16.2
+2.16.1
 

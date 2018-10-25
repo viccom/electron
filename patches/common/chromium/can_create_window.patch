@@ -5,10 +5,10 @@ Subject: can_create_window.patch
 
 
 diff --git a/content/browser/frame_host/render_frame_host_impl.cc b/content/browser/frame_host/render_frame_host_impl.cc
-index a5ed45971659d9d6f12fe89ff46b77e268262ea6..214e32db296c840e96bbae52a8672b17fad4a2cf 100644
+index c5e56bc15cfbf95f7564cc4d080243c48e585f20..30b945c417d04106a05a0d3dcb86e5df87845c0c 100644
 --- a/content/browser/frame_host/render_frame_host_impl.cc
 +++ b/content/browser/frame_host/render_frame_host_impl.cc
-@@ -3158,6 +3158,38 @@ void RenderFrameHostImpl::CreateNewWindow(
+@@ -3163,6 +3163,38 @@ void RenderFrameHostImpl::CreateNewWindow(
                 "frame_tree_node", frame_tree_node_->frame_tree_node_id(), "url",
                 params->target_url.possibly_invalid_spec());
  
@@ -47,7 +47,7 @@ index a5ed45971659d9d6f12fe89ff46b77e268262ea6..214e32db296c840e96bbae52a8672b17
    bool no_javascript_access = false;
  
    // Filter out URLs to which navigation is disallowed from this context.
-@@ -3186,6 +3218,7 @@ void RenderFrameHostImpl::CreateNewWindow(
+@@ -3191,6 +3223,7 @@ void RenderFrameHostImpl::CreateNewWindow(
            last_committed_origin_.GetURL(), params->window_container_type,
            params->target_url, params->referrer, params->frame_name,
            params->disposition, *params->features,
@@ -151,7 +151,7 @@ index bc2b501331e9d628c5285eee003ca3b55f3cb98f..89674a18276e34eebc0038e588ea4629
        bool opener_suppressed,
        bool* no_javascript_access);
 diff --git a/content/renderer/render_view_impl.cc b/content/renderer/render_view_impl.cc
-index 059aaa640ef351098d0a655889bb44e8db4980e5..c407ca5098cfce1e4218372ef08c9499c0738e6b 100644
+index 215c4a750f046939cb59ba8f53059eb4c3e35ef6..0e6199a8f594fd6c7384147c541e6c06a263f51e 100644
 --- a/content/renderer/render_view_impl.cc
 +++ b/content/renderer/render_view_impl.cc
 @@ -78,6 +78,7 @@
@@ -162,7 +162,7 @@ index 059aaa640ef351098d0a655889bb44e8db4980e5..c407ca5098cfce1e4218372ef08c9499
  #include "content/renderer/media/audio/audio_device_factory.h"
  #include "content/renderer/media/stream/media_stream_device_observer.h"
  #include "content/renderer/media/video_capture_impl_manager.h"
-@@ -1417,6 +1418,46 @@ WebView* RenderViewImpl::CreateView(WebLocalFrame* creator,
+@@ -1421,6 +1422,46 @@ WebView* RenderViewImpl::CreateView(WebLocalFrame* creator,
    }
    params->features = ConvertWebWindowFeaturesToMojoWindowFeatures(features);
  
@@ -236,5 +236,5 @@ index c601d6e4b28dfb4216b2d7072ba1ac9dd7345f42..00bbd237ff8afd6567218363423538b9
                         bool opener_suppressed,
                         bool* no_javascript_access) override;
 -- 
-2.16.2
+2.16.1
 

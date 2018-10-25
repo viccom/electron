@@ -17,5 +17,5 @@ index fae3bbccaf04ae653b52b484334a1b402a127b76..5a13426281adb0d51a5259346c1f588a
      content_security_policy_ = ContentSecurityPolicy::Create();
      content_security_policy_->SetOverrideURLForSelf(response.Url());
 -- 
-2.16.2
+2.16.1
 

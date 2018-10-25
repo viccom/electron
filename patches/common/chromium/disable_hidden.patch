@@ -5,7 +5,7 @@ Subject: disable_hidden.patch
 
 
 diff --git a/content/browser/renderer_host/render_widget_host_impl.cc b/content/browser/renderer_host/render_widget_host_impl.cc
-index 3544f769ac9de2c3deddf460fc39bffae5a8ec52..29bb2bd01c62f17de94e8dcc3ddff73f56e70efe 100644
+index 437b43ade73d0a154be0bf4aa14c29a9081b04d0..70e985b7b13031c760d2e791930b1361586a1707 100644
 --- a/content/browser/renderer_host/render_widget_host_impl.cc
 +++ b/content/browser/renderer_host/render_widget_host_impl.cc
 @@ -718,6 +718,9 @@ void RenderWidgetHostImpl::WasHidden() {
@@ -33,5 +33,5 @@ index c2d8cd562433ebdbb3372cae530c8967edb37225..c1e59acbfb0392833ddbcc4da60664c3
      hung_renderer_delay_ = delay;
    }
 -- 
-2.16.2
+2.16.1
 

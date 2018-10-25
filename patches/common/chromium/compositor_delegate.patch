@@ -32,7 +32,7 @@ index 642fff3b4367f0fe684d99cdcd4aee7d1a21cb40..45faeed249c0d92d8e146290fefddd5c
      } else {
        DCHECK(context_provider);
 diff --git a/ui/compositor/compositor.h b/ui/compositor/compositor.h
-index a974ea654834f106f9488a98b610c743601215bd..e2090ac4fc9abd4564937dedbc50dbe75f181d60 100644
+index a1b6716fc79f06216edf150a4e34f678a0da1518..89a1c426e9a48504082a3119f837e3d5f22d45a3 100644
 --- a/ui/compositor/compositor.h
 +++ b/ui/compositor/compositor.h
 @@ -25,6 +25,7 @@
@@ -79,5 +79,5 @@ index a974ea654834f106f9488a98b610c743601215bd..e2090ac4fc9abd4564937dedbc50dbe7
    Layer* root_layer_ = nullptr;
  
 -- 
-2.16.2
+2.16.1
 

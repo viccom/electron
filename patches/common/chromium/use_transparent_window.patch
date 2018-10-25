@@ -53,5 +53,5 @@ index eb7e480e6ab53813cd6f1063a063773b21e8197f..14fcd8a85e7823c8fa2ac73f5800e3c0
    void RemoveObserver(GpuSwitchingObserver* observer);
  
 -- 
-2.16.2
+2.16.1
 

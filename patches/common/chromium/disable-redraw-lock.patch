@@ -75,5 +75,5 @@ index b3f670dddf8936e29932345ef0516318b904d0ef..a63d727930a43c680ef3672921e63c35
    // will handle it or Chrome will custom draw it.
    virtual FrameMode GetFrameMode() const = 0;
 -- 
-2.16.2
+2.16.1
 
