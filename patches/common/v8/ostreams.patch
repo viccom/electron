@@ -18,5 +18,5 @@ index c6b64a1cd95b92ed37abe56d71dd6132c4ff9db4..236a73d01800f58a4f37c8abdd8df346
    explicit OFStream(FILE* f);
    virtual ~OFStream();
 -- 
-2.17.0
+2.16.1
 

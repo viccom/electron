@@ -11,17 +11,22 @@ Reviewed-By: Anna Henningsen <anna@addaleax.net>
 Reviewed-By: Refael Ackermann <refack@gmail.com>
 
 diff --git a/src/field-type.cc b/src/field-type.cc
-index 3b51095323c06bf8883ce484566fd263249390ac..2eebebe3d616ea786ed60cd0e9bea853ea764c7b 100644
+index c4d2080f78237684599e23f867e01e205b6094fd..ed5e7292fa251bc86a55558118c963995c1611f4 100644
 --- a/src/field-type.cc
 +++ b/src/field-type.cc
-@@ -78,6 +78,7 @@ void FieldType::PrintTo(std::ostream& os) {
+@@ -77,7 +77,12 @@ void FieldType::PrintTo(std::ostream& os) {
      os << "None";
    } else {
      DCHECK(IsClass());
++<<<<<<< HEAD
+     os << "Class(" << static_cast<void*>(AsClass()) << ")";
++=======
 +    HandleScope scope(Map::cast(this)->GetIsolate());
-     os << "Class(" << static_cast<void*>(*AsClass()) << ")";
++    os << "Class(" << static_cast<void*>(*AsClass()) << ")";
++>>>>>>> deps: add missing HandleScope in FieldType::PrintTo
    }
  }
+ 
 -- 
-2.17.0
+2.16.1
 
