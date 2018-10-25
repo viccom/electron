@@ -1,0 +1,2608 @@
+From dca0300a86eb8a24ea38faff2b4d27567ab54707 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Micha=C3=ABl=20Zasso?= <targos@protonmail.com>
+Date: Mon, 17 Sep 2018 12:38:22 +0200
+Subject: [PATCH 01/10] deps: cherry-pick 2363cdf from upstream V8
+
+Original commit message:
+
+    [tracing] do not add traces when disabled
+
+    https://github.com/nodejs/node/issues/21038
+
+    Change-Id: Ic4c9f403b5e54a97d3170b2311dd5aab8c8357c8
+    Reviewed-on: https://chromium-review.googlesource.com/1217726
+    Commit-Queue: Ali Ijaz Sheikh <ofrobots@google.com>
+    Reviewed-by: Yang Guo <yangguo@chromium.org>
+    Cr-Commit-Position: refs/heads/master@{#55809}
+
+Refs: https://github.com/v8/v8/commit/2363cdfefeb643285cbe8593b7c17d80e5d06cd9
+
+PR-URL: https://github.com/nodejs/node/pull/22754
+Reviewed-By: Matteo Collina <matteo.collina@gmail.com>
+Reviewed-By: James M Snell <jasnell@gmail.com>
+Reviewed-By: Refael Ackermann <refack@gmail.com>
+Reviewed-By: Ali Ijaz Sheikh <ofrobots@google.com>
+Reviewed-By: Colin Ihrig <cjihrig@gmail.com>
+---
+ src/libplatform/tracing/tracing-controller.cc | 32 +++++++++++++++------------
+ 1 file changed, 18 insertions(+), 14 deletions(-)
+
+diff --git a/src/libplatform/tracing/tracing-controller.cc b/src/libplatform/tracing/tracing-controller.cc
+index daaebc291a..aa8789fa07 100644
+--- a/src/libplatform/tracing/tracing-controller.cc
++++ b/src/libplatform/tracing/tracing-controller.cc
+@@ -77,13 +77,15 @@ uint64_t TracingController::AddTraceEvent(
+     const uint64_t* arg_values,
+     std::unique_ptr<v8::ConvertableToTraceFormat>* arg_convertables,
+     unsigned int flags) {
+-  uint64_t handle;
+-  TraceObject* trace_object = trace_buffer_->AddTraceEvent(&handle);
+-  if (trace_object) {
+-    trace_object->Initialize(
+-        phase, category_enabled_flag, name, scope, id, bind_id, num_args,
+-        arg_names, arg_types, arg_values, arg_convertables, flags,
+-        CurrentTimestampMicroseconds(), CurrentCpuTimestampMicroseconds());
++  uint64_t handle = 0;
++  if (mode_ != DISABLED) {
++    TraceObject* trace_object = trace_buffer_->AddTraceEvent(&handle);
++    if (trace_object) {
++      trace_object->Initialize(
++          phase, category_enabled_flag, name, scope, id, bind_id, num_args,
++          arg_names, arg_types, arg_values, arg_convertables, flags,
++          CurrentTimestampMicroseconds(), CurrentCpuTimestampMicroseconds());
++    }
+   }
+   return handle;
+ }
+@@ -95,13 +97,15 @@ uint64_t TracingController::AddTraceEventWithTimestamp(
+     const uint64_t* arg_values,
+     std::unique_ptr<v8::ConvertableToTraceFormat>* arg_convertables,
+     unsigned int flags, int64_t timestamp) {
+-  uint64_t handle;
+-  TraceObject* trace_object = trace_buffer_->AddTraceEvent(&handle);
+-  if (trace_object) {
+-    trace_object->Initialize(phase, category_enabled_flag, name, scope, id,
+-                             bind_id, num_args, arg_names, arg_types,
+-                             arg_values, arg_convertables, flags, timestamp,
+-                             CurrentCpuTimestampMicroseconds());
++  uint64_t handle = 0;
++  if (mode_ != DISABLED) {
++    TraceObject* trace_object = trace_buffer_->AddTraceEvent(&handle);
++    if (trace_object) {
++      trace_object->Initialize(phase, category_enabled_flag, name, scope, id,
++                               bind_id, num_args, arg_names, arg_types,
++                               arg_values, arg_convertables, flags, timestamp,
++                               CurrentCpuTimestampMicroseconds());
++    }
+   }
+   return handle;
+ }
+-- 
+2.16.1
+
+
+From 6117af349041834bfe844d32beeac86152031023 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Micha=C3=ABl=20Zasso?= <targos@protonmail.com>
+Date: Sat, 29 Sep 2018 11:35:06 +0200
+Subject: [PATCH 02/10] deps: patch V8 to 7.0.276.22
+
+Refs: https://github.com/v8/v8/compare/7.0.276.20...7.0.276.22
+
+PR-URL: https://github.com/nodejs/node/pull/23160
+Reviewed-By: Colin Ihrig <cjihrig@gmail.com>
+Reviewed-By: Refael Ackermann <refack@gmail.com>
+Reviewed-By: James M Snell <jasnell@gmail.com>
+---
+ DEPS                             | 2 +-
+ include/v8-version.h             | 2 +-
+ src/ia32/macro-assembler-ia32.cc | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/DEPS b/DEPS
+index 36d9d0eaeb..42e7a40baa 100644
+--- a/DEPS
++++ b/DEPS
+@@ -17,7 +17,7 @@ deps = {
+   'v8/tools/gyp':
+     Var('chromium_url') + '/external/gyp.git' + '@' + 'd61a9397e668fa9843c4aa7da9e79460fe590bfb',
+   'v8/third_party/depot_tools':
+-    Var('chromium_url') + '/chromium/tools/depot_tools.git' + '@' + '1aa405fd859a3bd625b0d61184d6e4a3cf95c0b4',
++    Var('chromium_url') + '/chromium/tools/depot_tools.git' + '@' + 'aaf2cc09c6874e394c6c1e4692360cc400d6b388',
+   'v8/third_party/icu':
+     Var('chromium_url') + '/chromium/deps/icu.git' + '@' + 'a191af9d025859e8368b8b469120d78006e9f5f6',
+   'v8/third_party/instrumented_libraries':
+diff --git a/include/v8-version.h b/include/v8-version.h
+index b4c837cda4..a93cd9be0c 100644
+--- a/include/v8-version.h
++++ b/include/v8-version.h
+@@ -11,7 +11,7 @@
+ #define V8_MAJOR_VERSION 7
+ #define V8_MINOR_VERSION 0
+ #define V8_BUILD_NUMBER 276
+-#define V8_PATCH_LEVEL 20
++#define V8_PATCH_LEVEL 22
+ 
+ // Use 1 for candidates and 0 otherwise.
+ // (Boolean macro values are not supported by all preprocessors.)
+diff --git a/src/ia32/macro-assembler-ia32.cc b/src/ia32/macro-assembler-ia32.cc
+index 5ff4b66e61..bb806edebd 100644
+--- a/src/ia32/macro-assembler-ia32.cc
++++ b/src/ia32/macro-assembler-ia32.cc
+@@ -742,7 +742,7 @@ void MacroAssembler::EnterExitFramePrologue(StackFrame::Type frame_type) {
+       ExternalReference::Create(IsolateAddressId::kCFunctionAddress, isolate());
+   mov(StaticVariable(c_entry_fp_address), ebp);
+   mov(StaticVariable(context_address), esi);
+-  mov(StaticVariable(c_function_address), ebx);
++  mov(StaticVariable(c_function_address), edx);
+ }
+ 
+ 
+-- 
+2.16.1
+
+
+From d25646b4c54aeed2ab85b5ec2a0c9f1d434ab3ec Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Micha=C3=ABl=20Zasso?= <targos@protonmail.com>
+Date: Tue, 2 Oct 2018 11:09:02 +0200
+Subject: [PATCH 03/10] deps: patch V8 to 7.0.276.24
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Refs: https://github.com/v8/v8/compare/7.0.276.22...7.0.276.24
+
+PR-URL: https://github.com/nodejs/node/pull/23158
+Refs: https://github.com/nodejs/node/issues/23122
+Reviewed-By: Yang Guo <yangguo@chromium.org>
+Reviewed-By: Michaël Zasso <targos@protonmail.com>
+---
+ include/v8-version.h         |   2 +-
+ include/v8.h                 |  55 ++++++++++++++++++++
+ src/api.cc                   | 120 +++++++++++++++++++++++++++++++++++++++++++
+ src/wasm/module-compiler.cc  |   6 ++-
+ src/wasm/streaming-decoder.h |   9 +++-
+ 5 files changed, 188 insertions(+), 4 deletions(-)
+
+diff --git a/include/v8-version.h b/include/v8-version.h
+index a93cd9be0c..06038eca3b 100644
+--- a/include/v8-version.h
++++ b/include/v8-version.h
+@@ -11,7 +11,7 @@
+ #define V8_MAJOR_VERSION 7
+ #define V8_MINOR_VERSION 0
+ #define V8_BUILD_NUMBER 276
+-#define V8_PATCH_LEVEL 22
++#define V8_PATCH_LEVEL 24
+ 
+ // Use 1 for candidates and 0 otherwise.
+ // (Boolean macro values are not supported by all preprocessors.)
+diff --git a/include/v8.h b/include/v8.h
+index 63edc67edf..a83305560c 100644
+--- a/include/v8.h
++++ b/include/v8.h
+@@ -1125,6 +1125,10 @@ class V8_EXPORT PrimitiveArray {
+   int Length() const;
+   void Set(Isolate* isolate, int index, Local<Primitive> item);
+   Local<Primitive> Get(Isolate* isolate, int index);
++
++  V8_DEPRECATED("Use Isolate version",
++                void Set(int index, Local<Primitive> item));
++  V8_DEPRECATED("Use Isolate version", Local<Primitive> Get(int index));
+ };
+ 
+ /**
+@@ -1829,6 +1833,8 @@ class V8_EXPORT StackTrace {
+   /**
+    * Returns a StackFrame at a particular index.
+    */
++  V8_DEPRECATED("Use Isolate version",
++                Local<StackFrame> GetFrame(uint32_t index) const);
+   Local<StackFrame> GetFrame(Isolate* isolate, uint32_t index) const;
+ 
+   /**
+@@ -2537,6 +2543,11 @@ class V8_EXPORT Value : public Data {
+   V8_DEPRECATE_SOON("Use maybe version",
+                     Local<Int32> ToInt32(Isolate* isolate) const);
+ 
++  inline V8_DEPRECATED("Use maybe version", Local<Boolean> ToBoolean() const);
++  inline V8_DEPRECATED("Use maybe version", Local<String> ToString() const);
++  inline V8_DEPRECATED("Use maybe version", Local<Object> ToObject() const);
++  inline V8_DEPRECATED("Use maybe version", Local<Integer> ToInteger() const);
++
+   /**
+    * Attempts to convert a string to an array index.
+    * Returns an empty handle if the conversion fails.
+@@ -2552,7 +2563,14 @@ class V8_EXPORT Value : public Data {
+       Local<Context> context) const;
+   V8_WARN_UNUSED_RESULT Maybe<int32_t> Int32Value(Local<Context> context) const;
+ 
++  V8_DEPRECATED("Use maybe version", bool BooleanValue() const);
++  V8_DEPRECATED("Use maybe version", double NumberValue() const);
++  V8_DEPRECATED("Use maybe version", int64_t IntegerValue() const);
++  V8_DEPRECATED("Use maybe version", uint32_t Uint32Value() const);
++  V8_DEPRECATED("Use maybe version", int32_t Int32Value() const);
++
+   /** JS == */
++  V8_DEPRECATED("Use maybe version", bool Equals(Local<Value> that) const);
+   V8_WARN_UNUSED_RESULT Maybe<bool> Equals(Local<Context> context,
+                                            Local<Value> that) const;
+   bool StrictEquals(Local<Value> that) const;
+@@ -2659,6 +2677,8 @@ class V8_EXPORT String : public Name {
+    * Returns the number of bytes in the UTF-8 encoded
+    * representation of this string.
+    */
++  V8_DEPRECATED("Use Isolate version instead", int Utf8Length() const);
++
+   int Utf8Length(Isolate* isolate) const;
+ 
+   /**
+@@ -2715,12 +2735,23 @@ class V8_EXPORT String : public Name {
+   // 16-bit character codes.
+   int Write(Isolate* isolate, uint16_t* buffer, int start = 0, int length = -1,
+             int options = NO_OPTIONS) const;
++  V8_DEPRECATED("Use Isolate* version",
++                int Write(uint16_t* buffer, int start = 0, int length = -1,
++                          int options = NO_OPTIONS) const);
+   // One byte characters.
+   int WriteOneByte(Isolate* isolate, uint8_t* buffer, int start = 0,
+                    int length = -1, int options = NO_OPTIONS) const;
++  V8_DEPRECATED("Use Isolate* version",
++                int WriteOneByte(uint8_t* buffer, int start = 0,
++                                 int length = -1, int options = NO_OPTIONS)
++                    const);
+   // UTF-8 encoded characters.
+   int WriteUtf8(Isolate* isolate, char* buffer, int length = -1,
+                 int* nchars_ref = NULL, int options = NO_OPTIONS) const;
++  V8_DEPRECATED("Use Isolate* version",
++                int WriteUtf8(char* buffer, int length = -1,
++                              int* nchars_ref = NULL, int options = NO_OPTIONS)
++                    const);
+ 
+   /**
+    * A zero length string.
+@@ -2884,6 +2915,9 @@ class V8_EXPORT String : public Name {
+    */
+   static Local<String> Concat(Isolate* isolate, Local<String> left,
+                               Local<String> right);
++  static V8_DEPRECATED("Use Isolate* version",
++                       Local<String> Concat(Local<String> left,
++                                            Local<String> right));
+ 
+   /**
+    * Creates a new external string using the data defined in the given
+@@ -5217,6 +5251,8 @@ class V8_EXPORT BooleanObject : public Object {
+ class V8_EXPORT StringObject : public Object {
+  public:
+   static Local<Value> New(Isolate* isolate, Local<String> value);
++  static V8_DEPRECATED("Use Isolate* version",
++                       Local<Value> New(Local<String> value));
+ 
+   Local<String> ValueOf() const;
+ 
+@@ -10215,6 +10251,25 @@ template <class T> Value* Value::Cast(T* value) {
+   return static_cast<Value*>(value);
+ }
+ 
++Local<Boolean> Value::ToBoolean() const {
++  return ToBoolean(Isolate::GetCurrent()->GetCurrentContext())
++      .FromMaybe(Local<Boolean>());
++}
++
++Local<String> Value::ToString() const {
++  return ToString(Isolate::GetCurrent()->GetCurrentContext())
++      .FromMaybe(Local<String>());
++}
++
++Local<Object> Value::ToObject() const {
++  return ToObject(Isolate::GetCurrent()->GetCurrentContext())
++      .FromMaybe(Local<Object>());
++}
++
++Local<Integer> Value::ToInteger() const {
++  return ToInteger(Isolate::GetCurrent()->GetCurrentContext())
++      .FromMaybe(Local<Integer>());
++}
+ 
+ Boolean* Boolean::Cast(v8::Value* value) {
+ #ifdef V8_ENABLE_CHECKS
+diff --git a/src/api.cc b/src/api.cc
+index d141496c57..4eb31a447c 100644
+--- a/src/api.cc
++++ b/src/api.cc
+@@ -219,6 +219,28 @@ Local<Context> ContextFromNeverReadOnlySpaceObject(
+   return reinterpret_cast<v8::Isolate*>(obj->GetIsolate())->GetCurrentContext();
+ }
+ 
++// TODO(delphick): Remove this completely when the deprecated functions that use
++// it are removed.
++// DO NOT USE THIS IN NEW CODE!
++i::Isolate* UnsafeIsolateFromHeapObject(i::Handle<i::HeapObject> obj) {
++  // Use MemoryChunk directly instead of Isolate::FromWritableHeapObject to
++  // temporarily allow isolate access from read-only space objects.
++  i::MemoryChunk* chunk = i::MemoryChunk::FromHeapObject(*obj);
++  return chunk->heap()->isolate();
++}
++
++// TODO(delphick): Remove this completely when the deprecated functions that use
++// it are removed.
++// DO NOT USE THIS IN NEW CODE!
++Local<Context> UnsafeContextFromHeapObject(i::Handle<i::Object> obj) {
++  // Use MemoryChunk directly instead of Isolate::FromWritableHeapObject to
++  // temporarily allow isolate access from read-only space objects.
++  i::MemoryChunk* chunk =
++      i::MemoryChunk::FromHeapObject(i::HeapObject::cast(*obj));
++  return reinterpret_cast<Isolate*>(chunk->heap()->isolate())
++      ->GetCurrentContext();
++}
++
+ class InternalEscapableScope : public v8::EscapableHandleScope {
+  public:
+   explicit inline InternalEscapableScope(i::Isolate* isolate)
+@@ -2170,6 +2192,12 @@ void PrimitiveArray::Set(Isolate* v8_isolate, int index,
+   array->set(index, *i_item);
+ }
+ 
++void PrimitiveArray::Set(int index, Local<Primitive> item) {
++  i::Handle<i::FixedArray> array = Utils::OpenHandle(this);
++  i::Isolate* isolate = UnsafeIsolateFromHeapObject(array);
++  Set(reinterpret_cast<Isolate*>(isolate), index, item);
++}
++
+ Local<Primitive> PrimitiveArray::Get(Isolate* v8_isolate, int index) {
+   i::Isolate* isolate = reinterpret_cast<i::Isolate*>(v8_isolate);
+   i::Handle<i::FixedArray> array = Utils::OpenHandle(this);
+@@ -2182,6 +2210,12 @@ Local<Primitive> PrimitiveArray::Get(Isolate* v8_isolate, int index) {
+   return ToApiHandle<Primitive>(i_item);
+ }
+ 
++Local<Primitive> PrimitiveArray::Get(int index) {
++  i::Handle<i::FixedArray> array = Utils::OpenHandle(this);
++  i::Isolate* isolate = UnsafeIsolateFromHeapObject(array);
++  return Get(reinterpret_cast<Isolate*>(isolate), index);
++}
++
+ Module::Status Module::GetStatus() const {
+   i::Handle<i::Module> self = Utils::OpenHandle(this);
+   switch (self->status()) {
+@@ -2910,6 +2944,11 @@ Local<StackFrame> StackTrace::GetFrame(Isolate* v8_isolate,
+   return scope.Escape(Utils::StackFrameToLocal(info));
+ }
+ 
++Local<StackFrame> StackTrace::GetFrame(uint32_t index) const {
++  i::Isolate* isolate = UnsafeIsolateFromHeapObject(Utils::OpenHandle(this));
++  return GetFrame(reinterpret_cast<Isolate*>(isolate), index);
++}
++
+ int StackTrace::GetFrameCount() const {
+   return Utils::OpenHandle(this)->length();
+ }
+@@ -3881,6 +3920,14 @@ Maybe<bool> Value::BooleanValue(Local<Context> context) const {
+   return Just(Utils::OpenHandle(this)->BooleanValue(isolate));
+ }
+ 
++bool Value::BooleanValue() const {
++  auto obj = Utils::OpenHandle(this);
++  if (obj->IsSmi()) return *obj != i::Smi::kZero;
++  DCHECK(obj->IsHeapObject());
++  i::Isolate* isolate =
++      UnsafeIsolateFromHeapObject(i::Handle<i::HeapObject>::cast(obj));
++  return obj->BooleanValue(isolate);
++}
+ 
+ Maybe<double> Value::NumberValue(Local<Context> context) const {
+   auto obj = Utils::OpenHandle(this);
+@@ -3894,6 +3941,12 @@ Maybe<double> Value::NumberValue(Local<Context> context) const {
+   return Just(num->Number());
+ }
+ 
++double Value::NumberValue() const {
++  auto obj = Utils::OpenHandle(this);
++  if (obj->IsNumber()) return obj->Number();
++  return NumberValue(UnsafeContextFromHeapObject(obj))
++      .FromMaybe(std::numeric_limits<double>::quiet_NaN());
++}
+ 
+ Maybe<int64_t> Value::IntegerValue(Local<Context> context) const {
+   auto obj = Utils::OpenHandle(this);
+@@ -3909,6 +3962,17 @@ Maybe<int64_t> Value::IntegerValue(Local<Context> context) const {
+   return Just(NumberToInt64(*num));
+ }
+ 
++int64_t Value::IntegerValue() const {
++  auto obj = Utils::OpenHandle(this);
++  if (obj->IsNumber()) {
++    if (obj->IsSmi()) {
++      return i::Smi::ToInt(*obj);
++    } else {
++      return static_cast<int64_t>(obj->Number());
++    }
++  }
++  return IntegerValue(UnsafeContextFromHeapObject(obj)).FromMaybe(0);
++}
+ 
+ Maybe<int32_t> Value::Int32Value(Local<Context> context) const {
+   auto obj = Utils::OpenHandle(this);
+@@ -3923,6 +3987,11 @@ Maybe<int32_t> Value::Int32Value(Local<Context> context) const {
+                            : static_cast<int32_t>(num->Number()));
+ }
+ 
++int32_t Value::Int32Value() const {
++  auto obj = Utils::OpenHandle(this);
++  if (obj->IsNumber()) return NumberToInt32(*obj);
++  return Int32Value(UnsafeContextFromHeapObject(obj)).FromMaybe(0);
++}
+ 
+ Maybe<uint32_t> Value::Uint32Value(Local<Context> context) const {
+   auto obj = Utils::OpenHandle(this);
+@@ -3937,6 +4006,11 @@ Maybe<uint32_t> Value::Uint32Value(Local<Context> context) const {
+                            : static_cast<uint32_t>(num->Number()));
+ }
+ 
++uint32_t Value::Uint32Value() const {
++  auto obj = Utils::OpenHandle(this);
++  if (obj->IsNumber()) return NumberToUint32(*obj);
++  return Uint32Value(UnsafeContextFromHeapObject(obj)).FromMaybe(0);
++}
+ 
+ MaybeLocal<Uint32> Value::ToArrayIndex(Local<Context> context) const {
+   auto self = Utils::OpenHandle(this);
+@@ -3971,6 +4045,19 @@ Maybe<bool> Value::Equals(Local<Context> context, Local<Value> that) const {
+   return i::Object::Equals(isolate, self, other);
+ }
+ 
++bool Value::Equals(Local<Value> that) const {
++  auto self = Utils::OpenHandle(this);
++  auto other = Utils::OpenHandle(*that);
++  if (self->IsSmi() && other->IsSmi()) {
++    return self->Number() == other->Number();
++  }
++  if (self->IsJSObject() && other->IsJSObject()) {
++    return *self == *other;
++  }
++  auto heap_object = self->IsSmi() ? other : self;
++  auto context = UnsafeContextFromHeapObject(heap_object);
++  return Equals(context, that).FromMaybe(false);
++}
+ 
+ bool Value::StrictEquals(Local<Value> that) const {
+   auto self = Utils::OpenHandle(this);
+@@ -5295,6 +5382,11 @@ bool String::ContainsOnlyOneByte() const {
+   return helper.Check(*str);
+ }
+ 
++int String::Utf8Length() const {
++  i::Isolate* isolate = UnsafeIsolateFromHeapObject(Utils::OpenHandle(this));
++  return Utf8Length(reinterpret_cast<Isolate*>(isolate));
++}
++
+ int String::Utf8Length(Isolate* isolate) const {
+   i::Handle<i::String> str = Utils::OpenHandle(this);
+   str = i::String::Flatten(reinterpret_cast<i::Isolate*>(isolate), str);
+@@ -5563,6 +5655,14 @@ int String::WriteUtf8(Isolate* v8_isolate, char* buffer, int capacity,
+   return writer.CompleteWrite(write_null, nchars_ref);
+ }
+ 
++int String::WriteUtf8(char* buffer, int capacity, int* nchars_ref,
++                      int options) const {
++  i::Handle<i::String> str = Utils::OpenHandle(this);
++  i::Isolate* isolate = UnsafeIsolateFromHeapObject(str);
++  return WriteUtf8(reinterpret_cast<Isolate*>(isolate), buffer, capacity,
++                   nchars_ref, options);
++}
++
+ template <typename CharType>
+ static inline int WriteHelper(i::Isolate* isolate, const String* string,
+                               CharType* buffer, int start, int length,
+@@ -5584,6 +5684,11 @@ static inline int WriteHelper(i::Isolate* isolate, const String* string,
+   return end - start;
+ }
+ 
++int String::WriteOneByte(uint8_t* buffer, int start, int length,
++                         int options) const {
++  i::Isolate* isolate = UnsafeIsolateFromHeapObject(Utils::OpenHandle(this));
++  return WriteHelper(isolate, this, buffer, start, length, options);
++}
+ 
+ int String::WriteOneByte(Isolate* isolate, uint8_t* buffer, int start,
+                          int length, int options) const {
+@@ -5591,6 +5696,10 @@ int String::WriteOneByte(Isolate* isolate, uint8_t* buffer, int start,
+                      start, length, options);
+ }
+ 
++int String::Write(uint16_t* buffer, int start, int length, int options) const {
++  i::Isolate* isolate = UnsafeIsolateFromHeapObject(Utils::OpenHandle(this));
++  return WriteHelper(isolate, this, buffer, start, length, options);
++}
+ 
+ int String::Write(Isolate* isolate, uint16_t* buffer, int start, int length,
+                   int options) const {
+@@ -6549,6 +6658,12 @@ Local<String> v8::String::Concat(Isolate* v8_isolate, Local<String> left,
+   return Utils::ToLocal(result);
+ }
+ 
++Local<String> v8::String::Concat(Local<String> left, Local<String> right) {
++  i::Handle<i::String> left_string = Utils::OpenHandle(*left);
++  i::Isolate* isolate = UnsafeIsolateFromHeapObject(left_string);
++  return Concat(reinterpret_cast<Isolate*>(isolate), left, right);
++}
++
+ MaybeLocal<String> v8::String::NewExternalTwoByte(
+     Isolate* isolate, v8::String::ExternalStringResource* resource) {
+   CHECK(resource && resource->data());
+@@ -6757,6 +6872,11 @@ bool v8::BooleanObject::ValueOf() const {
+   return jsvalue->value()->IsTrue(isolate);
+ }
+ 
++Local<v8::Value> v8::StringObject::New(Local<String> value) {
++  i::Handle<i::String> string = Utils::OpenHandle(*value);
++  i::Isolate* isolate = UnsafeIsolateFromHeapObject(string);
++  return New(reinterpret_cast<Isolate*>(isolate), value);
++}
+ 
+ Local<v8::Value> v8::StringObject::New(Isolate* v8_isolate,
+                                        Local<String> value) {
+diff --git a/src/wasm/module-compiler.cc b/src/wasm/module-compiler.cc
+index b143b631a1..b950c590b5 100644
+--- a/src/wasm/module-compiler.cc
++++ b/src/wasm/module-compiler.cc
+@@ -2203,6 +2203,11 @@ std::shared_ptr<StreamingDecoder> AsyncCompileJob::CreateStreamingDecoder() {
+ AsyncCompileJob::~AsyncCompileJob() {
+   background_task_manager_.CancelAndWait();
+   if (native_module_) native_module_->compilation_state()->Abort();
++  // Tell the streaming decoder that the AsyncCompileJob is not available
++  // anymore.
++  // TODO(ahaas): Is this notification really necessary? Check
++  // https://crbug.com/888170.
++  if (stream_) stream_->NotifyCompilationEnded();
+   CancelPendingForegroundTask();
+   for (auto d : deferred_handles_) delete d;
+ }
+@@ -2228,7 +2233,6 @@ void AsyncCompileJob::FinishCompile() {
+ }
+ 
+ void AsyncCompileJob::AsyncCompileFailed(Handle<Object> error_reason) {
+-  if (stream_) stream_->NotifyError();
+   // {job} keeps the {this} pointer alive.
+   std::shared_ptr<AsyncCompileJob> job =
+       isolate_->wasm_engine()->RemoveCompileJob(this);
+diff --git a/src/wasm/streaming-decoder.h b/src/wasm/streaming-decoder.h
+index 7b986bc28b..e14c32daf3 100644
+--- a/src/wasm/streaming-decoder.h
++++ b/src/wasm/streaming-decoder.h
+@@ -65,8 +65,13 @@ class V8_EXPORT_PRIVATE StreamingDecoder {
+ 
+   void Abort();
+ 
+-  // Notify the StreamingDecoder that there has been an compilation error.
+-  void NotifyError() { ok_ = false; }
++  // Notify the StreamingDecoder that compilation ended and the
++  // StreamingProcessor should not be called anymore.
++  void NotifyCompilationEnded() {
++    // We set {ok_} to false to turn all future calls to the StreamingDecoder
++    // into no-ops.
++    ok_ = false;
++  }
+ 
+  private:
+   // TODO(ahaas): Put the whole private state of the StreamingDecoder into the
+-- 
+2.16.1
+
+
+From ef85f08a5e45a5dbcffb0cfbe17831ec09fff4f5 Mon Sep 17 00:00:00 2001
+From: Anna Henningsen <anna@addaleax.net>
+Date: Thu, 4 Oct 2018 14:38:59 -0700
+Subject: [PATCH 04/10] deps: revert 9136dd8088a9 from upstream V8
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Reverting this enables us to provide slower, but longer-lasting
+replacements for the deprecated APIs.
+
+Original commit message:
+
+    Put back deleted V8_DEPRECATE_SOON methods
+
+    This partially reverts
+    https://chromium-review.googlesource.com/c/v8/v8/+/1177861,
+    which deleted many V8_DEPRECATE_SOON methods rather than moving them to
+    V8_DEPRECATED first. This puts them back and marks them V8_DEPRECATED.
+
+    Note V8_DEPRECATED that were deleted in the same CL stay deleted.
+
+    NOTRY=true
+    NOPRESUBMIT=true
+    NOTREECHECKS=true
+
+    Bug: v8:7786, v8:8240
+    Cq-Include-Trybots: luci.chromium.try:linux_chromium_rel_ng
+    Change-Id: I00330036d957f98dab403465b25e30d8382aac22
+    Reviewed-on: https://chromium-review.googlesource.com/1251422
+    Commit-Queue: Dan Elphick <delphick@chromium.org>
+    Reviewed-by: Yang Guo <yangguo@chromium.org>
+    Reviewed-by: Michael Hablich <hablich@chromium.org>
+    Cr-Commit-Position: refs/branch-heads/7.0@{#49}
+    Cr-Branched-From: 6e2adae6f7f8e891cfd01f3280482b20590427a6-refs/heads/7.0.276@{#1}
+    Cr-Branched-From: bc08a8624cbbea7a2d30071472bc73ad9544eadf-refs/heads/master@{#55424}
+
+Refs: https://github.com/v8/v8/commit/9136dd8088a95484b059a0301b25235510fc2882
+Refs: https://github.com/nodejs/node/issues/23122
+
+PR-URL: https://github.com/nodejs/node/pull/23158
+Reviewed-By: Yang Guo <yangguo@chromium.org>
+Reviewed-By: Michaël Zasso <targos@protonmail.com>
+---
+ include/v8.h |  55 ---------------------------
+ src/api.cc   | 120 -----------------------------------------------------------
+ 2 files changed, 175 deletions(-)
+
+diff --git a/include/v8.h b/include/v8.h
+index a83305560c..63edc67edf 100644
+--- a/include/v8.h
++++ b/include/v8.h
+@@ -1125,10 +1125,6 @@ class V8_EXPORT PrimitiveArray {
+   int Length() const;
+   void Set(Isolate* isolate, int index, Local<Primitive> item);
+   Local<Primitive> Get(Isolate* isolate, int index);
+-
+-  V8_DEPRECATED("Use Isolate version",
+-                void Set(int index, Local<Primitive> item));
+-  V8_DEPRECATED("Use Isolate version", Local<Primitive> Get(int index));
+ };
+ 
+ /**
+@@ -1833,8 +1829,6 @@ class V8_EXPORT StackTrace {
+   /**
+    * Returns a StackFrame at a particular index.
+    */
+-  V8_DEPRECATED("Use Isolate version",
+-                Local<StackFrame> GetFrame(uint32_t index) const);
+   Local<StackFrame> GetFrame(Isolate* isolate, uint32_t index) const;
+ 
+   /**
+@@ -2543,11 +2537,6 @@ class V8_EXPORT Value : public Data {
+   V8_DEPRECATE_SOON("Use maybe version",
+                     Local<Int32> ToInt32(Isolate* isolate) const);
+ 
+-  inline V8_DEPRECATED("Use maybe version", Local<Boolean> ToBoolean() const);
+-  inline V8_DEPRECATED("Use maybe version", Local<String> ToString() const);
+-  inline V8_DEPRECATED("Use maybe version", Local<Object> ToObject() const);
+-  inline V8_DEPRECATED("Use maybe version", Local<Integer> ToInteger() const);
+-
+   /**
+    * Attempts to convert a string to an array index.
+    * Returns an empty handle if the conversion fails.
+@@ -2563,14 +2552,7 @@ class V8_EXPORT Value : public Data {
+       Local<Context> context) const;
+   V8_WARN_UNUSED_RESULT Maybe<int32_t> Int32Value(Local<Context> context) const;
+ 
+-  V8_DEPRECATED("Use maybe version", bool BooleanValue() const);
+-  V8_DEPRECATED("Use maybe version", double NumberValue() const);
+-  V8_DEPRECATED("Use maybe version", int64_t IntegerValue() const);
+-  V8_DEPRECATED("Use maybe version", uint32_t Uint32Value() const);
+-  V8_DEPRECATED("Use maybe version", int32_t Int32Value() const);
+-
+   /** JS == */
+-  V8_DEPRECATED("Use maybe version", bool Equals(Local<Value> that) const);
+   V8_WARN_UNUSED_RESULT Maybe<bool> Equals(Local<Context> context,
+                                            Local<Value> that) const;
+   bool StrictEquals(Local<Value> that) const;
+@@ -2677,8 +2659,6 @@ class V8_EXPORT String : public Name {
+    * Returns the number of bytes in the UTF-8 encoded
+    * representation of this string.
+    */
+-  V8_DEPRECATED("Use Isolate version instead", int Utf8Length() const);
+-
+   int Utf8Length(Isolate* isolate) const;
+ 
+   /**
+@@ -2735,23 +2715,12 @@ class V8_EXPORT String : public Name {
+   // 16-bit character codes.
+   int Write(Isolate* isolate, uint16_t* buffer, int start = 0, int length = -1,
+             int options = NO_OPTIONS) const;
+-  V8_DEPRECATED("Use Isolate* version",
+-                int Write(uint16_t* buffer, int start = 0, int length = -1,
+-                          int options = NO_OPTIONS) const);
+   // One byte characters.
+   int WriteOneByte(Isolate* isolate, uint8_t* buffer, int start = 0,
+                    int length = -1, int options = NO_OPTIONS) const;
+-  V8_DEPRECATED("Use Isolate* version",
+-                int WriteOneByte(uint8_t* buffer, int start = 0,
+-                                 int length = -1, int options = NO_OPTIONS)
+-                    const);
+   // UTF-8 encoded characters.
+   int WriteUtf8(Isolate* isolate, char* buffer, int length = -1,
+                 int* nchars_ref = NULL, int options = NO_OPTIONS) const;
+-  V8_DEPRECATED("Use Isolate* version",
+-                int WriteUtf8(char* buffer, int length = -1,
+-                              int* nchars_ref = NULL, int options = NO_OPTIONS)
+-                    const);
+ 
+   /**
+    * A zero length string.
+@@ -2915,9 +2884,6 @@ class V8_EXPORT String : public Name {
+    */
+   static Local<String> Concat(Isolate* isolate, Local<String> left,
+                               Local<String> right);
+-  static V8_DEPRECATED("Use Isolate* version",
+-                       Local<String> Concat(Local<String> left,
+-                                            Local<String> right));
+ 
+   /**
+    * Creates a new external string using the data defined in the given
+@@ -5251,8 +5217,6 @@ class V8_EXPORT BooleanObject : public Object {
+ class V8_EXPORT StringObject : public Object {
+  public:
+   static Local<Value> New(Isolate* isolate, Local<String> value);
+-  static V8_DEPRECATED("Use Isolate* version",
+-                       Local<Value> New(Local<String> value));
+ 
+   Local<String> ValueOf() const;
+ 
+@@ -10251,25 +10215,6 @@ template <class T> Value* Value::Cast(T* value) {
+   return static_cast<Value*>(value);
+ }
+ 
+-Local<Boolean> Value::ToBoolean() const {
+-  return ToBoolean(Isolate::GetCurrent()->GetCurrentContext())
+-      .FromMaybe(Local<Boolean>());
+-}
+-
+-Local<String> Value::ToString() const {
+-  return ToString(Isolate::GetCurrent()->GetCurrentContext())
+-      .FromMaybe(Local<String>());
+-}
+-
+-Local<Object> Value::ToObject() const {
+-  return ToObject(Isolate::GetCurrent()->GetCurrentContext())
+-      .FromMaybe(Local<Object>());
+-}
+-
+-Local<Integer> Value::ToInteger() const {
+-  return ToInteger(Isolate::GetCurrent()->GetCurrentContext())
+-      .FromMaybe(Local<Integer>());
+-}
+ 
+ Boolean* Boolean::Cast(v8::Value* value) {
+ #ifdef V8_ENABLE_CHECKS
+diff --git a/src/api.cc b/src/api.cc
+index 4eb31a447c..d141496c57 100644
+--- a/src/api.cc
++++ b/src/api.cc
+@@ -219,28 +219,6 @@ Local<Context> ContextFromNeverReadOnlySpaceObject(
+   return reinterpret_cast<v8::Isolate*>(obj->GetIsolate())->GetCurrentContext();
+ }
+ 
+-// TODO(delphick): Remove this completely when the deprecated functions that use
+-// it are removed.
+-// DO NOT USE THIS IN NEW CODE!
+-i::Isolate* UnsafeIsolateFromHeapObject(i::Handle<i::HeapObject> obj) {
+-  // Use MemoryChunk directly instead of Isolate::FromWritableHeapObject to
+-  // temporarily allow isolate access from read-only space objects.
+-  i::MemoryChunk* chunk = i::MemoryChunk::FromHeapObject(*obj);
+-  return chunk->heap()->isolate();
+-}
+-
+-// TODO(delphick): Remove this completely when the deprecated functions that use
+-// it are removed.
+-// DO NOT USE THIS IN NEW CODE!
+-Local<Context> UnsafeContextFromHeapObject(i::Handle<i::Object> obj) {
+-  // Use MemoryChunk directly instead of Isolate::FromWritableHeapObject to
+-  // temporarily allow isolate access from read-only space objects.
+-  i::MemoryChunk* chunk =
+-      i::MemoryChunk::FromHeapObject(i::HeapObject::cast(*obj));
+-  return reinterpret_cast<Isolate*>(chunk->heap()->isolate())
+-      ->GetCurrentContext();
+-}
+-
+ class InternalEscapableScope : public v8::EscapableHandleScope {
+  public:
+   explicit inline InternalEscapableScope(i::Isolate* isolate)
+@@ -2192,12 +2170,6 @@ void PrimitiveArray::Set(Isolate* v8_isolate, int index,
+   array->set(index, *i_item);
+ }
+ 
+-void PrimitiveArray::Set(int index, Local<Primitive> item) {
+-  i::Handle<i::FixedArray> array = Utils::OpenHandle(this);
+-  i::Isolate* isolate = UnsafeIsolateFromHeapObject(array);
+-  Set(reinterpret_cast<Isolate*>(isolate), index, item);
+-}
+-
+ Local<Primitive> PrimitiveArray::Get(Isolate* v8_isolate, int index) {
+   i::Isolate* isolate = reinterpret_cast<i::Isolate*>(v8_isolate);
+   i::Handle<i::FixedArray> array = Utils::OpenHandle(this);
+@@ -2210,12 +2182,6 @@ Local<Primitive> PrimitiveArray::Get(Isolate* v8_isolate, int index) {
+   return ToApiHandle<Primitive>(i_item);
+ }
+ 
+-Local<Primitive> PrimitiveArray::Get(int index) {
+-  i::Handle<i::FixedArray> array = Utils::OpenHandle(this);
+-  i::Isolate* isolate = UnsafeIsolateFromHeapObject(array);
+-  return Get(reinterpret_cast<Isolate*>(isolate), index);
+-}
+-
+ Module::Status Module::GetStatus() const {
+   i::Handle<i::Module> self = Utils::OpenHandle(this);
+   switch (self->status()) {
+@@ -2944,11 +2910,6 @@ Local<StackFrame> StackTrace::GetFrame(Isolate* v8_isolate,
+   return scope.Escape(Utils::StackFrameToLocal(info));
+ }
+ 
+-Local<StackFrame> StackTrace::GetFrame(uint32_t index) const {
+-  i::Isolate* isolate = UnsafeIsolateFromHeapObject(Utils::OpenHandle(this));
+-  return GetFrame(reinterpret_cast<Isolate*>(isolate), index);
+-}
+-
+ int StackTrace::GetFrameCount() const {
+   return Utils::OpenHandle(this)->length();
+ }
+@@ -3920,14 +3881,6 @@ Maybe<bool> Value::BooleanValue(Local<Context> context) const {
+   return Just(Utils::OpenHandle(this)->BooleanValue(isolate));
+ }
+ 
+-bool Value::BooleanValue() const {
+-  auto obj = Utils::OpenHandle(this);
+-  if (obj->IsSmi()) return *obj != i::Smi::kZero;
+-  DCHECK(obj->IsHeapObject());
+-  i::Isolate* isolate =
+-      UnsafeIsolateFromHeapObject(i::Handle<i::HeapObject>::cast(obj));
+-  return obj->BooleanValue(isolate);
+-}
+ 
+ Maybe<double> Value::NumberValue(Local<Context> context) const {
+   auto obj = Utils::OpenHandle(this);
+@@ -3941,12 +3894,6 @@ Maybe<double> Value::NumberValue(Local<Context> context) const {
+   return Just(num->Number());
+ }
+ 
+-double Value::NumberValue() const {
+-  auto obj = Utils::OpenHandle(this);
+-  if (obj->IsNumber()) return obj->Number();
+-  return NumberValue(UnsafeContextFromHeapObject(obj))
+-      .FromMaybe(std::numeric_limits<double>::quiet_NaN());
+-}
+ 
+ Maybe<int64_t> Value::IntegerValue(Local<Context> context) const {
+   auto obj = Utils::OpenHandle(this);
+@@ -3962,17 +3909,6 @@ Maybe<int64_t> Value::IntegerValue(Local<Context> context) const {
+   return Just(NumberToInt64(*num));
+ }
+ 
+-int64_t Value::IntegerValue() const {
+-  auto obj = Utils::OpenHandle(this);
+-  if (obj->IsNumber()) {
+-    if (obj->IsSmi()) {
+-      return i::Smi::ToInt(*obj);
+-    } else {
+-      return static_cast<int64_t>(obj->Number());
+-    }
+-  }
+-  return IntegerValue(UnsafeContextFromHeapObject(obj)).FromMaybe(0);
+-}
+ 
+ Maybe<int32_t> Value::Int32Value(Local<Context> context) const {
+   auto obj = Utils::OpenHandle(this);
+@@ -3987,11 +3923,6 @@ Maybe<int32_t> Value::Int32Value(Local<Context> context) const {
+                            : static_cast<int32_t>(num->Number()));
+ }
+ 
+-int32_t Value::Int32Value() const {
+-  auto obj = Utils::OpenHandle(this);
+-  if (obj->IsNumber()) return NumberToInt32(*obj);
+-  return Int32Value(UnsafeContextFromHeapObject(obj)).FromMaybe(0);
+-}
+ 
+ Maybe<uint32_t> Value::Uint32Value(Local<Context> context) const {
+   auto obj = Utils::OpenHandle(this);
+@@ -4006,11 +3937,6 @@ Maybe<uint32_t> Value::Uint32Value(Local<Context> context) const {
+                            : static_cast<uint32_t>(num->Number()));
+ }
+ 
+-uint32_t Value::Uint32Value() const {
+-  auto obj = Utils::OpenHandle(this);
+-  if (obj->IsNumber()) return NumberToUint32(*obj);
+-  return Uint32Value(UnsafeContextFromHeapObject(obj)).FromMaybe(0);
+-}
+ 
+ MaybeLocal<Uint32> Value::ToArrayIndex(Local<Context> context) const {
+   auto self = Utils::OpenHandle(this);
+@@ -4045,19 +3971,6 @@ Maybe<bool> Value::Equals(Local<Context> context, Local<Value> that) const {
+   return i::Object::Equals(isolate, self, other);
+ }
+ 
+-bool Value::Equals(Local<Value> that) const {
+-  auto self = Utils::OpenHandle(this);
+-  auto other = Utils::OpenHandle(*that);
+-  if (self->IsSmi() && other->IsSmi()) {
+-    return self->Number() == other->Number();
+-  }
+-  if (self->IsJSObject() && other->IsJSObject()) {
+-    return *self == *other;
+-  }
+-  auto heap_object = self->IsSmi() ? other : self;
+-  auto context = UnsafeContextFromHeapObject(heap_object);
+-  return Equals(context, that).FromMaybe(false);
+-}
+ 
+ bool Value::StrictEquals(Local<Value> that) const {
+   auto self = Utils::OpenHandle(this);
+@@ -5382,11 +5295,6 @@ bool String::ContainsOnlyOneByte() const {
+   return helper.Check(*str);
+ }
+ 
+-int String::Utf8Length() const {
+-  i::Isolate* isolate = UnsafeIsolateFromHeapObject(Utils::OpenHandle(this));
+-  return Utf8Length(reinterpret_cast<Isolate*>(isolate));
+-}
+-
+ int String::Utf8Length(Isolate* isolate) const {
+   i::Handle<i::String> str = Utils::OpenHandle(this);
+   str = i::String::Flatten(reinterpret_cast<i::Isolate*>(isolate), str);
+@@ -5655,14 +5563,6 @@ int String::WriteUtf8(Isolate* v8_isolate, char* buffer, int capacity,
+   return writer.CompleteWrite(write_null, nchars_ref);
+ }
+ 
+-int String::WriteUtf8(char* buffer, int capacity, int* nchars_ref,
+-                      int options) const {
+-  i::Handle<i::String> str = Utils::OpenHandle(this);
+-  i::Isolate* isolate = UnsafeIsolateFromHeapObject(str);
+-  return WriteUtf8(reinterpret_cast<Isolate*>(isolate), buffer, capacity,
+-                   nchars_ref, options);
+-}
+-
+ template <typename CharType>
+ static inline int WriteHelper(i::Isolate* isolate, const String* string,
+                               CharType* buffer, int start, int length,
+@@ -5684,11 +5584,6 @@ static inline int WriteHelper(i::Isolate* isolate, const String* string,
+   return end - start;
+ }
+ 
+-int String::WriteOneByte(uint8_t* buffer, int start, int length,
+-                         int options) const {
+-  i::Isolate* isolate = UnsafeIsolateFromHeapObject(Utils::OpenHandle(this));
+-  return WriteHelper(isolate, this, buffer, start, length, options);
+-}
+ 
+ int String::WriteOneByte(Isolate* isolate, uint8_t* buffer, int start,
+                          int length, int options) const {
+@@ -5696,10 +5591,6 @@ int String::WriteOneByte(Isolate* isolate, uint8_t* buffer, int start,
+                      start, length, options);
+ }
+ 
+-int String::Write(uint16_t* buffer, int start, int length, int options) const {
+-  i::Isolate* isolate = UnsafeIsolateFromHeapObject(Utils::OpenHandle(this));
+-  return WriteHelper(isolate, this, buffer, start, length, options);
+-}
+ 
+ int String::Write(Isolate* isolate, uint16_t* buffer, int start, int length,
+                   int options) const {
+@@ -6658,12 +6549,6 @@ Local<String> v8::String::Concat(Isolate* v8_isolate, Local<String> left,
+   return Utils::ToLocal(result);
+ }
+ 
+-Local<String> v8::String::Concat(Local<String> left, Local<String> right) {
+-  i::Handle<i::String> left_string = Utils::OpenHandle(*left);
+-  i::Isolate* isolate = UnsafeIsolateFromHeapObject(left_string);
+-  return Concat(reinterpret_cast<Isolate*>(isolate), left, right);
+-}
+-
+ MaybeLocal<String> v8::String::NewExternalTwoByte(
+     Isolate* isolate, v8::String::ExternalStringResource* resource) {
+   CHECK(resource && resource->data());
+@@ -6872,11 +6757,6 @@ bool v8::BooleanObject::ValueOf() const {
+   return jsvalue->value()->IsTrue(isolate);
+ }
+ 
+-Local<v8::Value> v8::StringObject::New(Local<String> value) {
+-  i::Handle<i::String> string = Utils::OpenHandle(*value);
+-  i::Isolate* isolate = UnsafeIsolateFromHeapObject(string);
+-  return New(reinterpret_cast<Isolate*>(isolate), value);
+-}
+ 
+ Local<v8::Value> v8::StringObject::New(Isolate* v8_isolate,
+                                        Local<String> value) {
+-- 
+2.16.1
+
+
+From 4fcfa9d1dc2c22ffffc87eaca05d7c04e8b2cdc2 Mon Sep 17 00:00:00 2001
+From: Anna Henningsen <anna@addaleax.net>
+Date: Fri, 28 Sep 2018 22:43:38 -0400
+Subject: [PATCH 05/10] deps: provide more V8 backwards compatibility
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Add back a number deprecated APIs, using shims that
+should work well enough at least for the duration of Node 11
+and do not come with significant maintenance overhead.
+
+Refs: https://github.com/nodejs/node/issues/23122
+
+PR-URL: https://github.com/nodejs/node/pull/23158
+Reviewed-By: Rich Trott <rtrott@gmail.com>
+Reviewed-By: Joyee Cheung <joyeec9h3@gmail.com>
+Reviewed-By: Colin Ihrig <cjihrig@gmail.com>
+Reviewed-By: James M Snell <jasnell@gmail.com>
+Reviewed-By: Sakthipriyan Vairamani <thechargingvolcano@gmail.com>
+Reviewed-By: Yang Guo <yangguo@chromium.org>
+Reviewed-By: Michaël Zasso <targos@protonmail.com>
+---
+ include/v8.h | 89 ++++++++++++++++++++++++++++++++++++++++++++++++++++--------
+ src/api.cc   | 88 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 165 insertions(+), 12 deletions(-)
+
+diff --git a/include/v8.h b/include/v8.h
+index 63edc67edf..4a104e57d8 100644
+--- a/include/v8.h
++++ b/include/v8.h
+@@ -1123,6 +1123,10 @@ class V8_EXPORT PrimitiveArray {
+  public:
+   static Local<PrimitiveArray> New(Isolate* isolate, int length);
+   int Length() const;
++  V8_DEPRECATED("Use Isolate* version",
++      void Set(int index, Local<Primitive> item));
++  V8_DEPRECATED("Use Isolate* version",
++      Local<Primitive> Get(int index));
+   void Set(Isolate* isolate, int index, Local<Primitive> item);
+   Local<Primitive> Get(Isolate* isolate, int index);
+ };
+@@ -1829,6 +1833,8 @@ class V8_EXPORT StackTrace {
+   /**
+    * Returns a StackFrame at a particular index.
+    */
++  V8_DEPRECATED("Use Isolate version",
++                Local<StackFrame> GetFrame(uint32_t index) const);
+   Local<StackFrame> GetFrame(Isolate* isolate, uint32_t index) const;
+ 
+   /**
+@@ -2524,18 +2530,25 @@ class V8_EXPORT Value : public Data {
+       Local<Context> context) const;
+   V8_WARN_UNUSED_RESULT MaybeLocal<Int32> ToInt32(Local<Context> context) const;
+ 
+-  V8_DEPRECATE_SOON("Use maybe version",
+-                    Local<Boolean> ToBoolean(Isolate* isolate) const);
+-  V8_DEPRECATE_SOON("Use maybe version",
+-                    Local<Number> ToNumber(Isolate* isolate) const);
+-  V8_DEPRECATE_SOON("Use maybe version",
+-                    Local<String> ToString(Isolate* isolate) const);
+-  V8_DEPRECATE_SOON("Use maybe version",
+-                    Local<Object> ToObject(Isolate* isolate) const);
+-  V8_DEPRECATE_SOON("Use maybe version",
+-                    Local<Integer> ToInteger(Isolate* isolate) const);
+-  V8_DEPRECATE_SOON("Use maybe version",
+-                    Local<Int32> ToInt32(Isolate* isolate) const);
++  V8_DEPRECATED("Use maybe version",
++                Local<Boolean> ToBoolean(Isolate* isolate) const);
++  V8_DEPRECATED("Use maybe version",
++                Local<Number> ToNumber(Isolate* isolate) const);
++  V8_DEPRECATED("Use maybe version",
++                Local<String> ToString(Isolate* isolate) const);
++  V8_DEPRECATED("Use maybe version",
++                Local<Object> ToObject(Isolate* isolate) const);
++  V8_DEPRECATED("Use maybe version",
++                Local<Integer> ToInteger(Isolate* isolate) const);
++  V8_DEPRECATED("Use maybe version",
++                Local<Int32> ToInt32(Isolate* isolate) const);
++
++  inline V8_DEPRECATED("Use maybe version",
++                       Local<Boolean> ToBoolean() const);
++  inline V8_DEPRECATED("Use maybe version", Local<String> ToString() const);
++  inline V8_DEPRECATED("Use maybe version", Local<Object> ToObject() const);
++  inline V8_DEPRECATED("Use maybe version",
++                       Local<Integer> ToInteger() const);
+ 
+   /**
+    * Attempts to convert a string to an array index.
+@@ -2552,7 +2565,14 @@ class V8_EXPORT Value : public Data {
+       Local<Context> context) const;
+   V8_WARN_UNUSED_RESULT Maybe<int32_t> Int32Value(Local<Context> context) const;
+ 
++  V8_DEPRECATED("Use maybe version", bool BooleanValue() const);
++  V8_DEPRECATED("Use maybe version", double NumberValue() const);
++  V8_DEPRECATED("Use maybe version", int64_t IntegerValue() const);
++  V8_DEPRECATED("Use maybe version", uint32_t Uint32Value() const);
++  V8_DEPRECATED("Use maybe version", int32_t Int32Value() const);
++
+   /** JS == */
++  V8_DEPRECATED("Use maybe version", bool Equals(Local<Value> that) const);
+   V8_WARN_UNUSED_RESULT Maybe<bool> Equals(Local<Context> context,
+                                            Local<Value> that) const;
+   bool StrictEquals(Local<Value> that) const;
+@@ -2659,6 +2679,8 @@ class V8_EXPORT String : public Name {
+    * Returns the number of bytes in the UTF-8 encoded
+    * representation of this string.
+    */
++  V8_DEPRECATED("Use Isolate version instead", int Utf8Length() const);
++
+   int Utf8Length(Isolate* isolate) const;
+ 
+   /**
+@@ -2715,12 +2737,23 @@ class V8_EXPORT String : public Name {
+   // 16-bit character codes.
+   int Write(Isolate* isolate, uint16_t* buffer, int start = 0, int length = -1,
+             int options = NO_OPTIONS) const;
++  V8_DEPRECATED("Use Isolate* version",
++                int Write(uint16_t* buffer, int start = 0, int length = -1,
++                          int options = NO_OPTIONS) const);
+   // One byte characters.
+   int WriteOneByte(Isolate* isolate, uint8_t* buffer, int start = 0,
+                    int length = -1, int options = NO_OPTIONS) const;
++  V8_DEPRECATED("Use Isolate* version",
++                int WriteOneByte(uint8_t* buffer, int start = 0,
++                                 int length = -1, int options = NO_OPTIONS)
++                    const);
+   // UTF-8 encoded characters.
+   int WriteUtf8(Isolate* isolate, char* buffer, int length = -1,
+                 int* nchars_ref = NULL, int options = NO_OPTIONS) const;
++  V8_DEPRECATED("Use Isolate* version",
++                int WriteUtf8(char* buffer, int length = -1,
++                              int* nchars_ref = NULL,
++                              int options = NO_OPTIONS) const);
+ 
+   /**
+    * A zero length string.
+@@ -2884,6 +2917,9 @@ class V8_EXPORT String : public Name {
+    */
+   static Local<String> Concat(Isolate* isolate, Local<String> left,
+                               Local<String> right);
++  static V8_DEPRECATED("Use Isolate* version",
++                       Local<String> Concat(Local<String> left,
++                                            Local<String> right));
+ 
+   /**
+    * Creates a new external string using the data defined in the given
+@@ -2952,6 +2988,8 @@ class V8_EXPORT String : public Name {
+    */
+   class V8_EXPORT Utf8Value {
+    public:
++    V8_DEPRECATED("Use Isolate version",
++                  explicit Utf8Value(Local<v8::Value> obj));
+     Utf8Value(Isolate* isolate, Local<v8::Value> obj);
+     ~Utf8Value();
+     char* operator*() { return str_; }
+@@ -2975,6 +3013,7 @@ class V8_EXPORT String : public Name {
+    */
+   class V8_EXPORT Value {
+    public:
++    V8_DEPRECATED("Use Isolate version", explicit Value(Local<v8::Value> obj));
+     Value(Isolate* isolate, Local<v8::Value> obj);
+     ~Value();
+     uint16_t* operator*() { return str_; }
+@@ -5217,6 +5256,8 @@ class V8_EXPORT BooleanObject : public Object {
+ class V8_EXPORT StringObject : public Object {
+  public:
+   static Local<Value> New(Isolate* isolate, Local<String> value);
++  V8_DEPRECATED("Use Isolate* version",
++                static Local<Value> New(Local<String> value));
+ 
+   Local<String> ValueOf() const;
+ 
+@@ -10216,6 +10257,30 @@ template <class T> Value* Value::Cast(T* value) {
+ }
+ 
+ 
++Local<Boolean> Value::ToBoolean() const {
++  return ToBoolean(Isolate::GetCurrent()->GetCurrentContext())
++      .FromMaybe(Local<Boolean>());
++}
++
++
++Local<String> Value::ToString() const {
++  return ToString(Isolate::GetCurrent()->GetCurrentContext())
++      .FromMaybe(Local<String>());
++}
++
++
++Local<Object> Value::ToObject() const {
++  return ToObject(Isolate::GetCurrent()->GetCurrentContext())
++      .FromMaybe(Local<Object>());
++}
++
++
++Local<Integer> Value::ToInteger() const {
++  return ToInteger(Isolate::GetCurrent()->GetCurrentContext())
++      .FromMaybe(Local<Integer>());
++}
++
++
+ Boolean* Boolean::Cast(v8::Value* value) {
+ #ifdef V8_ENABLE_CHECKS
+   CheckCast(value);
+diff --git a/src/api.cc b/src/api.cc
+index d141496c57..5f1737b2a4 100644
+--- a/src/api.cc
++++ b/src/api.cc
+@@ -2157,6 +2157,10 @@ int PrimitiveArray::Length() const {
+   return array->length();
+ }
+ 
++void PrimitiveArray::Set(int index, Local<Primitive> item) {
++  return Set(Isolate::GetCurrent(), index, item);
++}
++
+ void PrimitiveArray::Set(Isolate* v8_isolate, int index,
+                          Local<Primitive> item) {
+   i::Isolate* isolate = reinterpret_cast<i::Isolate*>(v8_isolate);
+@@ -2170,6 +2174,10 @@ void PrimitiveArray::Set(Isolate* v8_isolate, int index,
+   array->set(index, *i_item);
+ }
+ 
++Local<Primitive> PrimitiveArray::Get(int index) {
++  return Get(Isolate::GetCurrent(), index);
++}
++
+ Local<Primitive> PrimitiveArray::Get(Isolate* v8_isolate, int index) {
+   i::Isolate* isolate = reinterpret_cast<i::Isolate*>(v8_isolate);
+   i::Handle<i::FixedArray> array = Utils::OpenHandle(this);
+@@ -2900,6 +2908,10 @@ void Message::PrintCurrentStackTrace(Isolate* isolate, FILE* out) {
+ 
+ // --- S t a c k T r a c e ---
+ 
++Local<StackFrame> StackTrace::GetFrame(uint32_t index) const {
++  return GetFrame(Isolate::GetCurrent(), index);
++}
++
+ Local<StackFrame> StackTrace::GetFrame(Isolate* v8_isolate,
+                                        uint32_t index) const {
+   i::Isolate* isolate = reinterpret_cast<i::Isolate*>(v8_isolate);
+@@ -3876,6 +3888,36 @@ void v8::RegExp::CheckCast(v8::Value* that) {
+ }
+ 
+ 
++bool Value::BooleanValue() const {
++  return BooleanValue(Isolate::GetCurrent()->GetCurrentContext())
++      .FromJust();
++}
++
++
++double Value::NumberValue() const {
++  return NumberValue(Isolate::GetCurrent()->GetCurrentContext())
++      .FromMaybe(std::numeric_limits<double>::quiet_NaN());
++}
++
++
++int64_t Value::IntegerValue() const {
++  return NumberValue(Isolate::GetCurrent()->GetCurrentContext())
++      .FromMaybe(0);
++}
++
++
++uint32_t Value::Uint32Value() const {
++  return Uint32Value(Isolate::GetCurrent()->GetCurrentContext())
++      .FromMaybe(0);
++}
++
++
++int32_t Value::Int32Value() const {
++  return Int32Value(Isolate::GetCurrent()->GetCurrentContext())
++      .FromMaybe(0);
++}
++
++
+ Maybe<bool> Value::BooleanValue(Local<Context> context) const {
+   i::Isolate* isolate = reinterpret_cast<i::Isolate*>(context->GetIsolate());
+   return Just(Utils::OpenHandle(this)->BooleanValue(isolate));
+@@ -3964,6 +4006,12 @@ MaybeLocal<Uint32> Value::ToArrayIndex(Local<Context> context) const {
+ }
+ 
+ 
++bool Value::Equals(Local<Value> that) const {
++  return Equals(Isolate::GetCurrent()->GetCurrentContext(), that)
++      .FromMaybe(false);
++}
++
++
+ Maybe<bool> Value::Equals(Local<Context> context, Local<Value> that) const {
+   i::Isolate* isolate = Utils::OpenHandle(*context)->GetIsolate();
+   auto self = Utils::OpenHandle(this);
+@@ -5295,6 +5343,10 @@ bool String::ContainsOnlyOneByte() const {
+   return helper.Check(*str);
+ }
+ 
++int String::Utf8Length() const {
++  return Utf8Length(Isolate::GetCurrent());
++}
++
+ int String::Utf8Length(Isolate* isolate) const {
+   i::Handle<i::String> str = Utils::OpenHandle(this);
+   str = i::String::Flatten(reinterpret_cast<i::Isolate*>(isolate), str);
+@@ -5518,6 +5570,14 @@ static bool RecursivelySerializeToUtf8(i::String* current,
+   return true;
+ }
+ 
++
++int String::WriteUtf8(char* buffer, int capacity,
++                      int* nchars_ref, int options) const {
++  return WriteUtf8(Isolate::GetCurrent(),
++                   buffer, capacity, nchars_ref, options);
++}
++
++
+ int String::WriteUtf8(Isolate* v8_isolate, char* buffer, int capacity,
+                       int* nchars_ref, int options) const {
+   i::Handle<i::String> str = Utils::OpenHandle(this);
+@@ -5585,6 +5645,18 @@ static inline int WriteHelper(i::Isolate* isolate, const String* string,
+ }
+ 
+ 
++int String::WriteOneByte(uint8_t* buffer, int start,
++                         int length, int options) const {
++  return WriteOneByte(Isolate::GetCurrent(), buffer, start, length, options);
++}
++
++
++int String::Write(uint16_t* buffer, int start, int length,
++                  int options) const {
++  return Write(Isolate::GetCurrent(), buffer, start, length, options);
++}
++
++
+ int String::WriteOneByte(Isolate* isolate, uint8_t* buffer, int start,
+                          int length, int options) const {
+   return WriteHelper(reinterpret_cast<i::Isolate*>(isolate), this, buffer,
+@@ -6532,6 +6604,11 @@ MaybeLocal<String> String::NewFromTwoByte(Isolate* isolate,
+   return result;
+ }
+ 
++Local<String> v8::String::Concat(Local<String> left,
++                                 Local<String> right) {
++  return Concat(Isolate::GetCurrent(), left, right);
++}
++
+ Local<String> v8::String::Concat(Isolate* v8_isolate, Local<String> left,
+                                  Local<String> right) {
+   i::Isolate* isolate = reinterpret_cast<i::Isolate*>(v8_isolate);
+@@ -6758,6 +6835,11 @@ bool v8::BooleanObject::ValueOf() const {
+ }
+ 
+ 
++Local<v8::Value> v8::StringObject::New(Local<String> value) {
++  return New(Isolate::GetCurrent(), value);
++}
++
++
+ Local<v8::Value> v8::StringObject::New(Isolate* v8_isolate,
+                                        Local<String> value) {
+   i::Handle<i::String> string = Utils::OpenHandle(*value);
+@@ -8893,6 +8975,9 @@ bool MicrotasksScope::IsRunningMicrotasks(Isolate* v8Isolate) {
+   return isolate->IsRunningMicrotasks();
+ }
+ 
++String::Utf8Value::Utf8Value(v8::Local<v8::Value> obj)
++  : Utf8Value(Isolate::GetCurrent(), obj) {}
++
+ String::Utf8Value::Utf8Value(v8::Isolate* isolate, v8::Local<v8::Value> obj)
+     : str_(nullptr), length_(0) {
+   if (obj.IsEmpty()) return;
+@@ -8912,6 +8997,9 @@ String::Utf8Value::~Utf8Value() {
+   i::DeleteArray(str_);
+ }
+ 
++String::Value::Value(v8::Local<v8::Value> obj)
++  : Value(Isolate::GetCurrent(), obj) {}
++
+ String::Value::Value(v8::Isolate* isolate, v8::Local<v8::Value> obj)
+     : str_(nullptr), length_(0) {
+   if (obj.IsEmpty()) return;
+-- 
+2.16.1
+
+
+From 5d44fe671c114f4d65b72216ce9a593be9225791 Mon Sep 17 00:00:00 2001
+From: Matheus Marchini <mat@mmarchini.me>
+Date: Mon, 17 Sep 2018 16:22:59 -0300
+Subject: [PATCH 06/10] deps: backport 958b761 from upstream V8
+
+Original commit message:
+
+    [postmortem] add postmortem metadata for symbols
+
+    As discussed in https://github.com/nodejs/llnode/issues/156, we need
+    postmortem metadata for Symbols to properly print Symbol property
+    names in postmortem debugging tools. Patch suggested by Ben
+    Noordhuis
+   (https://github.com/nodejs/llnode/issues/156#issuecomment-350467852).
+
+    R=bmeurer@google.com, yangguo@google.com
+
+    Change-Id: Ied6d3c079e8b23a9c796bc632c37785ed7dbc118
+    Reviewed-on: https://chromium-review.googlesource.com/1205052
+    Reviewed-by: Benedikt Meurer <bmeurer@chromium.org>
+    Reviewed-by: Yang Guo <yangguo@chromium.org>
+    Commit-Queue: Yang Guo <yangguo@chromium.org>
+    Cr-Commit-Position: refs/heads/master@{#55632}
+
+Refs: https://github.com/v8/v8/commit/958b761d3392495c3bf635e97fb9bd0e45
+
+PR-URL: https://github.com/nodejs/node/pull/22914
+Reviewed-By: Joyee Cheung <joyeec9h3@gmail.com>
+Reviewed-By: Colin Ihrig <cjihrig@gmail.com>
+Reviewed-By: James M Snell <jasnell@gmail.com>
+---
+ BUILD.gn                         | 2 ++
+ tools/gen-postmortem-metadata.py | 7 +------
+ 2 files changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/BUILD.gn b/BUILD.gn
+index c6a58776cd..7e3406fb67 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -865,6 +865,8 @@ action("postmortem-metadata") {
+     "src/objects/js-regexp-string-iterator.h",
+     "src/objects/map.h",
+     "src/objects/map-inl.h",
++    "src/objects/name.h",
++    "src/objects/name-inl.h",
+     "src/objects/scope-info.h",
+     "src/objects/script.h",
+     "src/objects/script-inl.h",
+diff --git a/tools/gen-postmortem-metadata.py b/tools/gen-postmortem-metadata.py
+index 8191c8152f..9bc1dd66d5 100644
+--- a/tools/gen-postmortem-metadata.py
++++ b/tools/gen-postmortem-metadata.py
+@@ -417,15 +417,10 @@ def load_objects_from_file(objfilename, checktypes):
+         # way around.
+         #
+         for type in types:
+-                #
+-                # Symbols and Strings are implemented using the same classes.
+-                #
+-                usetype = re.sub('SYMBOL_', 'STRING_', type);
+-
+                 #
+                 # REGEXP behaves like REG_EXP, as in JS_REGEXP_TYPE => JSRegExp.
+                 #
+-                usetype = re.sub('_REGEXP_', '_REG_EXP_', usetype);
++                usetype = re.sub('_REGEXP_', '_REG_EXP_', type);
+ 
+                 #
+                 # Remove the "_TYPE" suffix and then convert to camel case,
+-- 
+2.16.1
+
+
+From a67650f4be5d0a12d033321ecde3855bf7ff1d56 Mon Sep 17 00:00:00 2001
+From: Yang Guo <yangguo@chromium.org>
+Date: Thu, 4 Oct 2018 14:25:50 +0200
+Subject: [PATCH 07/10] deps: V8: cherry-pick 64-bit hash seed commits
+
+This serves as mitigation for the so-called HashWick vulnerability.
+
+Original commit messages:
+
+  commit 3833fef57368c53c6170559ffa524c8c69f16ee5
+    Author: Yang Guo <yangguo@chromium.org>
+    Date: Thu Sep 20 11:43:13 2018
+
+    Refactor integer hashing function names
+
+    We now clearly differentiate between:
+    - unseeded hash for 32-bit integers
+    - unseeded hash for 64-bit integers
+    - seeded hash for 32-bit integers
+    - seeded hash for strings
+
+    R=bmeurer@chromium.org
+
+    Bug: chromium:680662
+    Change-Id: I7459958c4158ee3501c962943dff8f33258bb5ce
+    Reviewed-on: https://chromium-review.googlesource.com/1235973
+    Commit-Queue: Yang Guo <yangguo@chromium.org>
+    Reviewed-by: Benedikt Meurer <bmeurer@chromium.org>
+    Cr-Commit-Position: refs/heads/master@{#56068}
+
+  commit 95a979e02d7154e45b293261a6998c99d71fc238
+    Author: Yang Guo <yangguo@chromium.org>
+    Date: Thu Sep 20 14:34:48 2018
+
+    Call into C++ to compute seeded integer hash
+
+    R=bmeurer@chromium.org
+
+    Bug: chromium:680662
+    Change-Id: I8dace89d576dfcc5833fd539ce698a9ade1cb5a0
+    Reviewed-on: https://chromium-review.googlesource.com/1235928
+    Commit-Queue: Yang Guo <yangguo@chromium.org>
+    Reviewed-by: Benedikt Meurer <bmeurer@chromium.org>
+    Cr-Commit-Position: refs/heads/master@{#56091}
+
+  commit 2c2af0022d5feb9e525a00a76cb15db9f3e38dba
+    Author: Yang Guo <yangguo@chromium.org>
+    Date: Thu Sep 27 16:37:57 2018
+
+    Use 64-bit for seeded integer hashes
+
+    R=petermarshall@chromium.org
+
+    Bug: chromium:680662
+    Change-Id: If48d1043dbe1e1bb695ec890c23e103a6cacf2d4
+    Reviewed-on: https://chromium-review.googlesource.com/1244220
+    Commit-Queue: Yang Guo <yangguo@chromium.org>
+    Reviewed-by: Peter Marshall <petermarshall@chromium.org>
+    Cr-Commit-Position: refs/heads/master@{#56271}
+
+Refs: https://github.com/nodejs/node/issues/23259
+
+PR-URL: https://github.com/nodejs/node/pull/23264
+Reviewed-By: Matteo Collina <matteo.collina@gmail.com>
+Reviewed-By: Anna Henningsen <anna@addaleax.net>
+Reviewed-By: Ali Ijaz Sheikh <ofrobots@google.com>
+Reviewed-By: James M Snell <jasnell@gmail.com>
+Reviewed-By: Michael Dawson <michael_dawson@ca.ibm.com>
+---
+ src/builtins/builtins-collections-gen.cc  | 11 +++--
+ src/code-stub-assembler.cc                | 69 ++++++++-----------------------
+ src/code-stub-assembler.h                 |  8 +---
+ src/compiler/effect-control-linearizer.cc |  6 +--
+ src/compiler/effect-control-linearizer.h  |  2 +-
+ src/external-reference.cc                 |  9 ++++
+ src/external-reference.h                  |  1 +
+ src/frames.cc                             |  2 +-
+ src/objects-inl.h                         | 12 +++---
+ src/objects/bigint.h                      |  2 +-
+ src/objects/ordered-hash-table.h          |  2 +-
+ src/profiler/allocation-tracker.cc        |  2 +-
+ src/profiler/heap-snapshot-generator.cc   |  2 +-
+ src/profiler/heap-snapshot-generator.h    |  4 +-
+ src/profiler/profile-generator.cc         | 12 +++---
+ src/profiler/profile-generator.h          |  2 +-
+ src/utils.h                               | 18 ++++----
+ test/cctest/test-code-stub-assembler.cc   | 12 +-----
+ 18 files changed, 69 insertions(+), 107 deletions(-)
+
+diff --git a/src/builtins/builtins-collections-gen.cc b/src/builtins/builtins-collections-gen.cc
+index 5808d2a98c..aab0475e21 100644
+--- a/src/builtins/builtins-collections-gen.cc
++++ b/src/builtins/builtins-collections-gen.cc
+@@ -689,7 +689,7 @@ class CollectionsBuiltinsAssembler : public BaseCollectionsAssembler {
+                                              Node* key_tagged, Variable* result,
+                                              Label* entry_found,
+                                              Label* not_found);
+-  Node* ComputeIntegerHashForString(Node* context, Node* string_key);
++  Node* ComputeStringHash(Node* context, Node* string_key);
+   void SameValueZeroString(Node* context, Node* key_string, Node* candidate_key,
+                            Label* if_same, Label* if_not_same);
+ 
+@@ -846,8 +846,7 @@ void CollectionsBuiltinsAssembler::FindOrderedHashTableEntryForSmiKey(
+     Node* table, Node* smi_key, Variable* result, Label* entry_found,
+     Label* not_found) {
+   Node* const key_untagged = SmiUntag(smi_key);
+-  Node* const hash =
+-      ChangeInt32ToIntPtr(ComputeIntegerHash(key_untagged, Int32Constant(0)));
++  Node* const hash = ChangeInt32ToIntPtr(ComputeUnseededHash(key_untagged));
+   CSA_ASSERT(this, IntPtrGreaterThanOrEqual(hash, IntPtrConstant(0)));
+   result->Bind(hash);
+   FindOrderedHashTableEntry<CollectionType>(
+@@ -862,7 +861,7 @@ template <typename CollectionType>
+ void CollectionsBuiltinsAssembler::FindOrderedHashTableEntryForStringKey(
+     Node* context, Node* table, Node* key_tagged, Variable* result,
+     Label* entry_found, Label* not_found) {
+-  Node* const hash = ComputeIntegerHashForString(context, key_tagged);
++  Node* const hash = ComputeStringHash(context, key_tagged);
+   CSA_ASSERT(this, IntPtrGreaterThanOrEqual(hash, IntPtrConstant(0)));
+   result->Bind(hash);
+   FindOrderedHashTableEntry<CollectionType>(
+@@ -920,8 +919,8 @@ void CollectionsBuiltinsAssembler::FindOrderedHashTableEntryForOtherKey(
+       result, entry_found, not_found);
+ }
+ 
+-Node* CollectionsBuiltinsAssembler::ComputeIntegerHashForString(
+-    Node* context, Node* string_key) {
++Node* CollectionsBuiltinsAssembler::ComputeStringHash(Node* context,
++                                                      Node* string_key) {
+   VARIABLE(var_result, MachineType::PointerRepresentation());
+ 
+   Label hash_not_computed(this), done(this, &var_result);
+diff --git a/src/code-stub-assembler.cc b/src/code-stub-assembler.cc
+index 2527e89a25..5bd780b520 100644
+--- a/src/code-stub-assembler.cc
++++ b/src/code-stub-assembler.cc
+@@ -253,40 +253,6 @@ HEAP_IMMUTABLE_IMMOVABLE_OBJECT_LIST(HEAP_CONSTANT_ACCESSOR);
+ HEAP_IMMOVABLE_OBJECT_LIST(HEAP_CONSTANT_TEST);
+ #undef HEAP_CONSTANT_TEST
+ 
+-TNode<Int64T> CodeStubAssembler::HashSeed() {
+-  DCHECK(Is64());
+-  TNode<HeapObject> hash_seed_root =
+-      TNode<HeapObject>::UncheckedCast(LoadRoot(Heap::kHashSeedRootIndex));
+-  return TNode<Int64T>::UncheckedCast(LoadObjectField(
+-      hash_seed_root, ByteArray::kHeaderSize, MachineType::Int64()));
+-}
+-
+-TNode<Int32T> CodeStubAssembler::HashSeedHigh() {
+-  DCHECK(!Is64());
+-#ifdef V8_TARGET_BIG_ENDIAN
+-  static int kOffset = 0;
+-#else
+-  static int kOffset = kInt32Size;
+-#endif
+-  TNode<HeapObject> hash_seed_root =
+-      TNode<HeapObject>::UncheckedCast(LoadRoot(Heap::kHashSeedRootIndex));
+-  return TNode<Int32T>::UncheckedCast(LoadObjectField(
+-      hash_seed_root, ByteArray::kHeaderSize + kOffset, MachineType::Int32()));
+-}
+-
+-TNode<Int32T> CodeStubAssembler::HashSeedLow() {
+-  DCHECK(!Is64());
+-#ifdef V8_TARGET_BIG_ENDIAN
+-  static int kOffset = kInt32Size;
+-#else
+-  static int kOffset = 0;
+-#endif
+-  TNode<HeapObject> hash_seed_root =
+-      TNode<HeapObject>::UncheckedCast(LoadRoot(Heap::kHashSeedRootIndex));
+-  return TNode<Int32T>::UncheckedCast(LoadObjectField(
+-      hash_seed_root, ByteArray::kHeaderSize + kOffset, MachineType::Int32()));
+-}
+-
+ Node* CodeStubAssembler::IntPtrOrSmiConstant(int value, ParameterMode mode) {
+   if (mode == SMI_PARAMETERS) {
+     return SmiConstant(value);
+@@ -7709,14 +7675,9 @@ template void CodeStubAssembler::NameDictionaryLookup<GlobalDictionary>(
+     TNode<GlobalDictionary>, TNode<Name>, Label*, TVariable<IntPtrT>*, Label*,
+     int, LookupMode);
+ 
+-Node* CodeStubAssembler::ComputeIntegerHash(Node* key) {
+-  return ComputeIntegerHash(key, IntPtrConstant(kZeroHashSeed));
+-}
+-
+-Node* CodeStubAssembler::ComputeIntegerHash(Node* key, Node* seed) {
+-  // See v8::internal::ComputeIntegerHash()
++Node* CodeStubAssembler::ComputeUnseededHash(Node* key) {
++  // See v8::internal::ComputeUnseededHash()
+   Node* hash = TruncateIntPtrToInt32(key);
+-  hash = Word32Xor(hash, seed);
+   hash = Int32Add(Word32Xor(hash, Int32Constant(0xFFFFFFFF)),
+                   Word32Shl(hash, Int32Constant(15)));
+   hash = Word32Xor(hash, Word32Shr(hash, Int32Constant(12)));
+@@ -7727,6 +7688,21 @@ Node* CodeStubAssembler::ComputeIntegerHash(Node* key, Node* seed) {
+   return Word32And(hash, Int32Constant(0x3FFFFFFF));
+ }
+ 
++Node* CodeStubAssembler::ComputeSeededHash(Node* key) {
++  Node* const function_addr =
++      ExternalConstant(ExternalReference::compute_integer_hash());
++  Node* const isolate_ptr =
++      ExternalConstant(ExternalReference::isolate_address(isolate()));
++
++  MachineType type_ptr = MachineType::Pointer();
++  MachineType type_uint32 = MachineType::Uint32();
++
++  Node* const result =
++      CallCFunction2(type_uint32, type_ptr, type_uint32, function_addr,
++                     isolate_ptr, TruncateIntPtrToInt32(key));
++  return result;
++}
++
+ void CodeStubAssembler::NumberDictionaryLookup(
+     TNode<NumberDictionary> dictionary, TNode<IntPtrT> intptr_index,
+     Label* if_found, TVariable<IntPtrT>* var_entry, Label* if_not_found) {
+@@ -7737,16 +7713,7 @@ void CodeStubAssembler::NumberDictionaryLookup(
+   TNode<IntPtrT> capacity = SmiUntag(GetCapacity<NumberDictionary>(dictionary));
+   TNode<WordT> mask = IntPtrSub(capacity, IntPtrConstant(1));
+ 
+-  TNode<Int32T> int32_seed;
+-
+-  if (Is64()) {
+-    int32_seed = TruncateInt64ToInt32(HashSeed());
+-  } else {
+-    int32_seed = HashSeedLow();
+-  }
+-
+-  TNode<WordT> hash =
+-      ChangeUint32ToWord(ComputeIntegerHash(intptr_index, int32_seed));
++  TNode<WordT> hash = ChangeUint32ToWord(ComputeSeededHash(intptr_index));
+   Node* key_as_float64 = RoundIntPtrToFloat64(intptr_index);
+ 
+   // See Dictionary::FirstProbe().
+diff --git a/src/code-stub-assembler.h b/src/code-stub-assembler.h
+index 51ed647412..38fc9717de 100644
+--- a/src/code-stub-assembler.h
++++ b/src/code-stub-assembler.h
+@@ -450,10 +450,6 @@ class V8_EXPORT_PRIVATE CodeStubAssembler : public compiler::CodeAssembler {
+   HEAP_IMMOVABLE_OBJECT_LIST(HEAP_CONSTANT_TEST)
+ #undef HEAP_CONSTANT_TEST
+ 
+-  TNode<Int64T> HashSeed();
+-  TNode<Int32T> HashSeedHigh();
+-  TNode<Int32T> HashSeedLow();
+-
+   Node* IntPtrOrSmiConstant(int value, ParameterMode mode);
+   TNode<Smi> LanguageModeConstant(LanguageMode mode) {
+     return SmiConstant(static_cast<int>(mode));
+@@ -2288,8 +2284,8 @@ class V8_EXPORT_PRIVATE CodeStubAssembler : public compiler::CodeAssembler {
+                             int inlined_probes = kInlinedDictionaryProbes,
+                             LookupMode mode = kFindExisting);
+ 
+-  Node* ComputeIntegerHash(Node* key);
+-  Node* ComputeIntegerHash(Node* key, Node* seed);
++  Node* ComputeUnseededHash(Node* key);
++  Node* ComputeSeededHash(Node* key);
+ 
+   void NumberDictionaryLookup(TNode<NumberDictionary> dictionary,
+                               TNode<IntPtrT> intptr_index, Label* if_found,
+diff --git a/src/compiler/effect-control-linearizer.cc b/src/compiler/effect-control-linearizer.cc
+index 9b12c022c4..4bb4f8df77 100644
+--- a/src/compiler/effect-control-linearizer.cc
++++ b/src/compiler/effect-control-linearizer.cc
+@@ -4768,8 +4768,8 @@ Node* EffectControlLinearizer::LowerFindOrderedHashMapEntry(Node* node) {
+   }
+ }
+ 
+-Node* EffectControlLinearizer::ComputeIntegerHash(Node* value) {
+-  // See v8::internal::ComputeIntegerHash()
++Node* EffectControlLinearizer::ComputeUnseededHash(Node* value) {
++  // See v8::internal::ComputeUnseededHash()
+   value = __ Int32Add(__ Word32Xor(value, __ Int32Constant(0xFFFFFFFF)),
+                       __ Word32Shl(value, __ Int32Constant(15)));
+   value = __ Word32Xor(value, __ Word32Shr(value, __ Int32Constant(12)));
+@@ -4787,7 +4787,7 @@ Node* EffectControlLinearizer::LowerFindOrderedHashMapEntryForInt32Key(
+   Node* key = NodeProperties::GetValueInput(node, 1);
+ 
+   // Compute the integer hash code.
+-  Node* hash = ChangeUint32ToUintPtr(ComputeIntegerHash(key));
++  Node* hash = ChangeUint32ToUintPtr(ComputeUnseededHash(key));
+ 
+   Node* number_of_buckets = ChangeSmiToIntPtr(__ LoadField(
+       AccessBuilder::ForOrderedHashTableBaseNumberOfBuckets(), table));
+diff --git a/src/compiler/effect-control-linearizer.h b/src/compiler/effect-control-linearizer.h
+index aa174ed45e..272bc44599 100644
+--- a/src/compiler/effect-control-linearizer.h
++++ b/src/compiler/effect-control-linearizer.h
+@@ -182,7 +182,7 @@ class V8_EXPORT_PRIVATE EffectControlLinearizer {
+   Node* BuildFloat64RoundDown(Node* value);
+   Node* BuildFloat64RoundTruncate(Node* input);
+   Node* BuildUint32Mod(Node* lhs, Node* rhs);
+-  Node* ComputeIntegerHash(Node* value);
++  Node* ComputeUnseededHash(Node* value);
+   Node* LowerStringComparison(Callable const& callable, Node* node);
+   Node* IsElementsKindGreaterThan(Node* kind, ElementsKind reference_kind);
+ 
+diff --git a/src/external-reference.cc b/src/external-reference.cc
+index 8f6bf22d38..0fbde95a1c 100644
+--- a/src/external-reference.cc
++++ b/src/external-reference.cc
+@@ -764,6 +764,15 @@ ExternalReference ExternalReference::jsreceiver_create_identity_hash(
+   return ExternalReference(Redirect(FUNCTION_ADDR(f)));
+ }
+ 
++static uint32_t ComputeSeededIntegerHash(Isolate* isolate, uint32_t key) {
++  DisallowHeapAllocation no_gc;
++  return ComputeSeededHash(key, isolate->heap()->HashSeed());
++}
++
++ExternalReference ExternalReference::compute_integer_hash() {
++  return ExternalReference(Redirect(FUNCTION_ADDR(ComputeSeededIntegerHash)));
++}
++
+ ExternalReference
+ ExternalReference::copy_fast_number_jsarray_elements_to_typed_array() {
+   return ExternalReference(
+diff --git a/src/external-reference.h b/src/external-reference.h
+index 2f77946982..fb3ec07c8b 100644
+--- a/src/external-reference.h
++++ b/src/external-reference.h
+@@ -83,6 +83,7 @@ class StatsCounter;
+   V(address_of_uint32_bias, "uint32_bias")                                    \
+   V(bytecode_size_table_address, "Bytecodes::bytecode_size_table_address")    \
+   V(check_object_type, "check_object_type")                                   \
++  V(compute_integer_hash, "ComputeSeededHash")                                \
+   V(compute_output_frames_function, "Deoptimizer::ComputeOutputFrames()")     \
+   V(copy_fast_number_jsarray_elements_to_typed_array,                         \
+     "copy_fast_number_jsarray_elements_to_typed_array")                       \
+diff --git a/src/frames.cc b/src/frames.cc
+index e5751e2bb7..9dee01698e 100644
+--- a/src/frames.cc
++++ b/src/frames.cc
+@@ -2133,7 +2133,7 @@ InnerPointerToCodeCache::InnerPointerToCodeCacheEntry*
+     InnerPointerToCodeCache::GetCacheEntry(Address inner_pointer) {
+   isolate_->counters()->pc_to_code()->Increment();
+   DCHECK(base::bits::IsPowerOfTwo(kInnerPointerToCodeCacheSize));
+-  uint32_t hash = ComputeIntegerHash(
++  uint32_t hash = ComputeUnseededHash(
+       ObjectAddressForHashing(reinterpret_cast<void*>(inner_pointer)));
+   uint32_t index = hash & (kInnerPointerToCodeCacheSize - 1);
+   InnerPointerToCodeCacheEntry* entry = cache(index);
+diff --git a/src/objects-inl.h b/src/objects-inl.h
+index 05b2b9653f..ed3e15ed9e 100644
+--- a/src/objects-inl.h
++++ b/src/objects-inl.h
+@@ -2980,14 +2980,14 @@ bool NumberDictionaryBaseShape::IsMatch(uint32_t key, Object* other) {
+ }
+ 
+ uint32_t NumberDictionaryBaseShape::Hash(Isolate* isolate, uint32_t key) {
+-  return ComputeIntegerHash(key, isolate->heap()->HashSeed());
++  return ComputeSeededHash(key, isolate->heap()->HashSeed());
+ }
+ 
+ uint32_t NumberDictionaryBaseShape::HashForObject(Isolate* isolate,
+                                                   Object* other) {
+   DCHECK(other->IsNumber());
+-  return ComputeIntegerHash(static_cast<uint32_t>(other->Number()),
+-                            isolate->heap()->HashSeed());
++  return ComputeSeededHash(static_cast<uint32_t>(other->Number()),
++                           isolate->heap()->HashSeed());
+ }
+ 
+ Handle<Object> NumberDictionaryBaseShape::AsHandle(Isolate* isolate,
+@@ -3067,18 +3067,18 @@ uint32_t ObjectHashTableShape::HashForObject(Isolate* isolate, Object* other) {
+ Object* Object::GetSimpleHash(Object* object) {
+   DisallowHeapAllocation no_gc;
+   if (object->IsSmi()) {
+-    uint32_t hash = ComputeIntegerHash(Smi::ToInt(object));
++    uint32_t hash = ComputeUnseededHash(Smi::ToInt(object));
+     return Smi::FromInt(hash & Smi::kMaxValue);
+   }
+   if (object->IsHeapNumber()) {
+     double num = HeapNumber::cast(object)->value();
+     if (std::isnan(num)) return Smi::FromInt(Smi::kMaxValue);
+-    // Use ComputeIntegerHash for all values in Signed32 range, including -0,
++    // Use ComputeUnseededHash for all values in Signed32 range, including -0,
+     // which is considered equal to 0 because collections use SameValueZero.
+     uint32_t hash;
+     // Check range before conversion to avoid undefined behavior.
+     if (num >= kMinInt && num <= kMaxInt && FastI2D(FastD2I(num)) == num) {
+-      hash = ComputeIntegerHash(FastD2I(num));
++      hash = ComputeUnseededHash(FastD2I(num));
+     } else {
+       hash = ComputeLongHash(double_to_uint64(num));
+     }
+diff --git a/src/objects/bigint.h b/src/objects/bigint.h
+index f8c5c3dbf6..a30a4779de 100644
+--- a/src/objects/bigint.h
++++ b/src/objects/bigint.h
+@@ -137,7 +137,7 @@ class V8_EXPORT_PRIVATE BigInt : public BigIntBase {
+   bool ToBoolean() { return !is_zero(); }
+   uint32_t Hash() {
+     // TODO(jkummerow): Improve this. At least use length and sign.
+-    return is_zero() ? 0 : ComputeIntegerHash(static_cast<uint32_t>(digit(0)));
++    return is_zero() ? 0 : ComputeLongHash(static_cast<uint64_t>(digit(0)));
+   }
+ 
+   static bool EqualToString(Isolate* isolate, Handle<BigInt> x,
+diff --git a/src/objects/ordered-hash-table.h b/src/objects/ordered-hash-table.h
+index 20f3fe2eda..0ee0f71c5c 100644
+--- a/src/objects/ordered-hash-table.h
++++ b/src/objects/ordered-hash-table.h
+@@ -144,7 +144,7 @@ class OrderedHashTable : public OrderedHashTableBase {
+     // This special cases for Smi, so that we avoid the HandleScope
+     // creation below.
+     if (key->IsSmi()) {
+-      uint32_t hash = ComputeIntegerHash(Smi::ToInt(key));
++      uint32_t hash = ComputeUnseededHash(Smi::ToInt(key));
+       return HashToEntry(hash & Smi::kMaxValue);
+     }
+     HandleScope scope(isolate);
+diff --git a/src/profiler/allocation-tracker.cc b/src/profiler/allocation-tracker.cc
+index 21843325f9..e5b3139785 100644
+--- a/src/profiler/allocation-tracker.cc
++++ b/src/profiler/allocation-tracker.cc
+@@ -239,7 +239,7 @@ void AllocationTracker::AllocationEvent(Address addr, int size) {
+ 
+ 
+ static uint32_t SnapshotObjectIdHash(SnapshotObjectId id) {
+-  return ComputeIntegerHash(static_cast<uint32_t>(id));
++  return ComputeUnseededHash(static_cast<uint32_t>(id));
+ }
+ 
+ 
+diff --git a/src/profiler/heap-snapshot-generator.cc b/src/profiler/heap-snapshot-generator.cc
+index 96ac785273..5d98a98b8e 100644
+--- a/src/profiler/heap-snapshot-generator.cc
++++ b/src/profiler/heap-snapshot-generator.cc
+@@ -535,7 +535,7 @@ SnapshotObjectId HeapObjectsMap::GenerateId(v8::RetainedObjectInfo* info) {
+                                            heap_->HashSeed());
+   intptr_t element_count = info->GetElementCount();
+   if (element_count != -1) {
+-    id ^= ComputeIntegerHash(static_cast<uint32_t>(element_count));
++    id ^= ComputeUnseededHash(static_cast<uint32_t>(element_count));
+   }
+   return id << 1;
+ }
+diff --git a/src/profiler/heap-snapshot-generator.h b/src/profiler/heap-snapshot-generator.h
+index f28852fdc2..f25bee9f46 100644
+--- a/src/profiler/heap-snapshot-generator.h
++++ b/src/profiler/heap-snapshot-generator.h
+@@ -309,7 +309,7 @@ class HeapEntriesMap {
+ 
+  private:
+   static uint32_t Hash(HeapThing thing) {
+-    return ComputeIntegerHash(
++    return ComputeUnseededHash(
+         static_cast<uint32_t>(reinterpret_cast<uintptr_t>(thing)));
+   }
+ 
+@@ -520,7 +520,7 @@ class NativeObjectsExplorer {
+ 
+   struct RetainedInfoHasher {
+     std::size_t operator()(v8::RetainedObjectInfo* info) const {
+-      return ComputeIntegerHash(static_cast<uint32_t>(info->GetHash()));
++      return ComputeUnseededHash(static_cast<uint32_t>(info->GetHash()));
+     }
+   };
+   struct RetainedInfoEquals {
+diff --git a/src/profiler/profile-generator.cc b/src/profiler/profile-generator.cc
+index c0c5242219..d60da5a44d 100644
+--- a/src/profiler/profile-generator.cc
++++ b/src/profiler/profile-generator.cc
+@@ -84,16 +84,16 @@ CodeEntry* CodeEntry::UnresolvedEntryCreateTrait::Create() {
+ }
+ 
+ uint32_t CodeEntry::GetHash() const {
+-  uint32_t hash = ComputeIntegerHash(tag());
++  uint32_t hash = ComputeUnseededHash(tag());
+   if (script_id_ != v8::UnboundScript::kNoScriptId) {
+-    hash ^= ComputeIntegerHash(static_cast<uint32_t>(script_id_));
+-    hash ^= ComputeIntegerHash(static_cast<uint32_t>(position_));
++    hash ^= ComputeUnseededHash(static_cast<uint32_t>(script_id_));
++    hash ^= ComputeUnseededHash(static_cast<uint32_t>(position_));
+   } else {
+-    hash ^= ComputeIntegerHash(
++    hash ^= ComputeUnseededHash(
+         static_cast<uint32_t>(reinterpret_cast<uintptr_t>(name_)));
+-    hash ^= ComputeIntegerHash(
++    hash ^= ComputeUnseededHash(
+         static_cast<uint32_t>(reinterpret_cast<uintptr_t>(resource_name_)));
+-    hash ^= ComputeIntegerHash(line_number_);
++    hash ^= ComputeUnseededHash(line_number_);
+   }
+   return hash;
+ }
+diff --git a/src/profiler/profile-generator.h b/src/profiler/profile-generator.h
+index 8eef05bcdb..ac9506ab21 100644
+--- a/src/profiler/profile-generator.h
++++ b/src/profiler/profile-generator.h
+@@ -243,7 +243,7 @@ class ProfileNode {
+   };
+   struct Hasher {
+     std::size_t operator()(CodeEntryAndLineNumber pair) const {
+-      return pair.code_entry->GetHash() ^ ComputeIntegerHash(pair.line_number);
++      return pair.code_entry->GetHash() ^ ComputeUnseededHash(pair.line_number);
+     }
+   };
+ 
+diff --git a/src/utils.h b/src/utils.h
+index 9f4bb08614..f4669524a7 100644
+--- a/src/utils.h
++++ b/src/utils.h
+@@ -476,10 +476,9 @@ class BitSetComputer {
+ static const uint64_t kZeroHashSeed = 0;
+ 
+ // Thomas Wang, Integer Hash Functions.
+-// http://www.concentric.net/~Ttwang/tech/inthash.htm
+-inline uint32_t ComputeIntegerHash(uint32_t key, uint64_t seed) {
++// http://www.concentric.net/~Ttwang/tech/inthash.htm`
++inline uint32_t ComputeUnseededHash(uint32_t key) {
+   uint32_t hash = key;
+-  hash = hash ^ static_cast<uint32_t>(seed);
+   hash = ~hash + (hash << 15);  // hash = (hash << 15) - hash - 1;
+   hash = hash ^ (hash >> 12);
+   hash = hash + (hash << 2);
+@@ -489,10 +488,6 @@ inline uint32_t ComputeIntegerHash(uint32_t key, uint64_t seed) {
+   return hash & 0x3fffffff;
+ }
+ 
+-inline uint32_t ComputeIntegerHash(uint32_t key) {
+-  return ComputeIntegerHash(key, kZeroHashSeed);
+-}
+-
+ inline uint32_t ComputeLongHash(uint64_t key) {
+   uint64_t hash = key;
+   hash = ~hash + (hash << 18);  // hash = (hash << 18) - hash - 1;
+@@ -501,17 +496,20 @@ inline uint32_t ComputeLongHash(uint64_t key) {
+   hash = hash ^ (hash >> 11);
+   hash = hash + (hash << 6);
+   hash = hash ^ (hash >> 22);
+-  return static_cast<uint32_t>(hash);
++  return static_cast<uint32_t>(hash & 0x3fffffff);
+ }
+ 
++inline uint32_t ComputeSeededHash(uint32_t key, uint64_t seed) {
++  return ComputeLongHash(static_cast<uint64_t>(key) ^ seed);
++}
+ 
+ inline uint32_t ComputePointerHash(void* ptr) {
+-  return ComputeIntegerHash(
++  return ComputeUnseededHash(
+       static_cast<uint32_t>(reinterpret_cast<intptr_t>(ptr)));
+ }
+ 
+ inline uint32_t ComputeAddressHash(Address address) {
+-  return ComputeIntegerHash(static_cast<uint32_t>(address & 0xFFFFFFFFul));
++  return ComputeUnseededHash(static_cast<uint32_t>(address & 0xFFFFFFFFul));
+ }
+ 
+ // ----------------------------------------------------------------------------
+diff --git a/test/cctest/test-code-stub-assembler.cc b/test/cctest/test-code-stub-assembler.cc
+index d7cdb39933..2036e13450 100644
+--- a/test/cctest/test-code-stub-assembler.cc
++++ b/test/cctest/test-code-stub-assembler.cc
+@@ -332,15 +332,7 @@ TEST(ComputeIntegerHash) {
+   CodeAssemblerTester asm_tester(isolate, kNumParams);
+   CodeStubAssembler m(asm_tester.state());
+ 
+-  TNode<Int32T> int32_seed;
+-  if (m.Is64()) {
+-    int32_seed = m.TruncateInt64ToInt32(m.HashSeed());
+-  } else {
+-    int32_seed = m.HashSeedLow();
+-  }
+-
+-  m.Return(m.SmiFromInt32(
+-      m.ComputeIntegerHash(m.SmiUntag(m.Parameter(0)), int32_seed)));
++  m.Return(m.SmiFromInt32(m.ComputeSeededHash(m.SmiUntag(m.Parameter(0)))));
+ 
+   FunctionTester ft(asm_tester.GenerateCode(), kNumParams);
+ 
+@@ -352,7 +344,7 @@ TEST(ComputeIntegerHash) {
+     Handle<Smi> key(Smi::FromInt(k), isolate);
+     Handle<Object> result = ft.Call(key).ToHandleChecked();
+ 
+-    uint32_t hash = ComputeIntegerHash(k, isolate->heap()->HashSeed());
++    uint32_t hash = ComputeSeededHash(k, isolate->heap()->HashSeed());
+     Smi* expected = Smi::FromInt(hash & Smi::kMaxValue);
+     CHECK_EQ(expected, Smi::cast(*result));
+   }
+-- 
+2.16.1
+
+
+From 8165657d9ead768382a2ada9b06f66827f1b29e2 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Micha=C3=ABl=20Zasso?= <targos@protonmail.com>
+Date: Sat, 6 Oct 2018 14:35:27 +0200
+Subject: [PATCH 08/10] deps: patch V8 to 7.0.276.25
+
+PR-URL: https://github.com/nodejs/node/pull/23290
+Refs: https://github.com/v8/v8/compare/7.0.276.24...7.0.276.25
+Reviewed-By: Refael Ackermann <refack@gmail.com>
+Reviewed-By: Colin Ihrig <cjihrig@gmail.com>
+---
+ include/v8-version.h                    |  2 +-
+ src/compiler/js-operator.cc             |  2 +-
+ test/mjsunit/compiler/regress-888923.js | 31 +++++++++++++++++++++++++++++++
+ 3 files changed, 33 insertions(+), 2 deletions(-)
+ create mode 100644 deps/v8/test/mjsunit/compiler/regress-888923.js
+
+diff --git a/include/v8-version.h b/include/v8-version.h
+index 06038eca3b..415d17dbbb 100644
+--- a/include/v8-version.h
++++ b/include/v8-version.h
+@@ -11,7 +11,7 @@
+ #define V8_MAJOR_VERSION 7
+ #define V8_MINOR_VERSION 0
+ #define V8_BUILD_NUMBER 276
+-#define V8_PATCH_LEVEL 24
++#define V8_PATCH_LEVEL 25
+ 
+ // Use 1 for candidates and 0 otherwise.
+ // (Boolean macro values are not supported by all preprocessors.)
+diff --git a/src/compiler/js-operator.cc b/src/compiler/js-operator.cc
+index 57f9950d55..797814314f 100644
+--- a/src/compiler/js-operator.cc
++++ b/src/compiler/js-operator.cc
+@@ -623,7 +623,7 @@ CompareOperationHint CompareOperationHintOf(const Operator* op) {
+   V(CreateKeyValueArray, Operator::kEliminatable, 2, 1)                \
+   V(CreatePromise, Operator::kEliminatable, 0, 1)                      \
+   V(CreateTypedArray, Operator::kNoProperties, 5, 1)                   \
+-  V(CreateObject, Operator::kNoWrite, 1, 1)                            \
++  V(CreateObject, Operator::kNoProperties, 1, 1)                       \
+   V(ObjectIsArray, Operator::kNoProperties, 1, 1)                      \
+   V(HasProperty, Operator::kNoProperties, 2, 1)                        \
+   V(HasInPrototypeChain, Operator::kNoProperties, 2, 1)                \
+diff --git a/test/mjsunit/compiler/regress-888923.js b/test/mjsunit/compiler/regress-888923.js
+new file mode 100644
+index 0000000000..e352673b7d
+--- /dev/null
++++ b/test/mjsunit/compiler/regress-888923.js
+@@ -0,0 +1,31 @@
++// Copyright 2018 the V8 project authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++// Flags: --allow-natives-syntax
++
++(function() {
++  function f(o) {
++    o.x;
++    Object.create(o);
++    return o.y.a;
++  }
++
++  f({ x : 0, y : { a : 1 } });
++  f({ x : 0, y : { a : 2 } });
++  %OptimizeFunctionOnNextCall(f);
++  assertEquals(3, f({ x : 0, y : { a : 3 } }));
++})();
++
++(function() {
++  function f(o) {
++    let a = o.y;
++    Object.create(o);
++    return o.x + a;
++  }
++
++  f({ x : 42, y : 21 });
++  f({ x : 42, y : 21 });
++  %OptimizeFunctionOnNextCall(f);
++  assertEquals(63, f({ x : 42, y : 21 }));
++})();
+-- 
+2.16.1
+
+
+From 083d1012c77f2fd6c2fcc6cd86890c3107ad8006 Mon Sep 17 00:00:00 2001
+From: Anna Henningsen <anna@addaleax.net>
+Date: Wed, 10 Oct 2018 15:24:08 -0700
+Subject: [PATCH 09/10] deps: cherry-pick b0af309 from upstream V8
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Original commit message:
+
+    [api] Remove deprecated wasm methods
+
+    These methods were deprecated in 7.0, now we can remove them.
+
+    R=adamk@chromium.org
+
+    Bug: v8:7868
+    Cq-Include-Trybots: luci.chromium.try:linux_chromium_rel_ng
+    Change-Id: I60badb378a055152bdd27aed67d11ddf74fce174
+    Reviewed-on: https://chromium-review.googlesource.com/1209283
+    Reviewed-by: Adam Klein <adamk@chromium.org>
+    Commit-Queue: Clemens Hammacher <clemensh@chromium.org>
+    Cr-Commit-Position: refs/heads/master@{#55695}
+
+Refs: https://github.com/v8/v8/commit/b0af30948505b68c843b538e109ab378d3750e37
+
+PR-URL: https://github.com/nodejs/node/pull/23415
+Reviewed-By: Refael Ackermann <refack@gmail.com>
+Reviewed-By: Rich Trott <rtrott@gmail.com>
+Reviewed-By: Joyee Cheung <joyeec9h3@gmail.com>
+Reviewed-By: Sakthipriyan Vairamani <thechargingvolcano@gmail.com>
+Reviewed-By: Tiancheng "Timothy" Gu <timothygu99@gmail.com>
+Reviewed-By: Gus Caplan <me@gus.host>
+Reviewed-By: James M Snell <jasnell@gmail.com>
+Reviewed-By: Michaël Zasso <targos@protonmail.com>
+Reviewed-By: Colin Ihrig <cjihrig@gmail.com>
+---
+ include/v8.h | 24 ------------------------
+ src/api.cc   |  8 --------
+ 2 files changed, 32 deletions(-)
+
+diff --git a/include/v8.h b/include/v8.h
+index 4a104e57d8..6c3cc84fba 100644
+--- a/include/v8.h
++++ b/include/v8.h
+@@ -4362,13 +4362,6 @@ class V8_EXPORT WasmCompiledModule : public Object {
+  public:
+   typedef std::pair<std::unique_ptr<const uint8_t[]>, size_t> SerializedModule;
+ 
+-// The COMMA macro allows us to use ',' inside of the V8_DEPRECATED macro.
+-#define COMMA ,
+-  V8_DEPRECATED(
+-      "Use BufferReference.",
+-      typedef std::pair<const uint8_t * COMMA size_t> CallerOwnedBuffer);
+-#undef COMMA
+-
+   /**
+    * A unowned reference to a byte buffer.
+    */
+@@ -4377,12 +4370,6 @@ class V8_EXPORT WasmCompiledModule : public Object {
+     size_t size;
+     BufferReference(const uint8_t* start, size_t size)
+         : start(start), size(size) {}
+-    // Temporarily allow conversion to and from CallerOwnedBuffer.
+-    V8_DEPRECATED(
+-        "Use BufferReference directly.",
+-        inline BufferReference(CallerOwnedBuffer));  // NOLINT(runtime/explicit)
+-    V8_DEPRECATED("Use BufferReference directly.",
+-                      inline operator CallerOwnedBuffer());
+   };
+ 
+   /**
+@@ -4429,8 +4416,6 @@ class V8_EXPORT WasmCompiledModule : public Object {
+    * Get the wasm-encoded bytes that were used to compile this module.
+    */
+   BufferReference GetWasmWireBytesRef();
+-  V8_DEPRECATED("Use GetWasmWireBytesRef version.",
+-                    Local<String> GetWasmWireBytes());
+ 
+   /**
+    * Serialize the compiled module. The serialized data does not include the
+@@ -4463,15 +4448,6 @@ class V8_EXPORT WasmCompiledModule : public Object {
+   static void CheckCast(Value* obj);
+ };
+ 
+-// TODO(clemensh): Remove after M70 branch.
+-WasmCompiledModule::BufferReference::BufferReference(
+-    WasmCompiledModule::CallerOwnedBuffer buf)
+-    : BufferReference(buf.first, buf.second) {}
+-WasmCompiledModule::BufferReference::
+-operator WasmCompiledModule::CallerOwnedBuffer() {
+-  return {start, size};
+-}
+-
+ /**
+  * The V8 interface for WebAssembly streaming compilation. When streaming
+  * compilation is initiated, V8 passes a {WasmStreaming} object to the embedder
+diff --git a/src/api.cc b/src/api.cc
+index 5f1737b2a4..fbd947b923 100644
+--- a/src/api.cc
++++ b/src/api.cc
+@@ -7382,14 +7382,6 @@ WasmCompiledModule::BufferReference WasmCompiledModule::GetWasmWireBytesRef() {
+   return {bytes_vec.start(), bytes_vec.size()};
+ }
+ 
+-Local<String> WasmCompiledModule::GetWasmWireBytes() {
+-  BufferReference ref = GetWasmWireBytesRef();
+-  CHECK_LE(ref.size, String::kMaxLength);
+-  return String::NewFromOneByte(GetIsolate(), ref.start, NewStringType::kNormal,
+-                                static_cast<int>(ref.size))
+-      .ToLocalChecked();
+-}
+-
+ WasmCompiledModule::TransferrableModule
+ WasmCompiledModule::GetTransferrableModule() {
+   if (i::FLAG_wasm_shared_code) {
+-- 
+2.16.1
+
+
+From e2258adff760940ddebd82f7d26cb2a7e28645ef Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Micha=C3=ABl=20Zasso?= <targos@protonmail.com>
+Date: Thu, 11 Oct 2018 18:51:36 +0200
+Subject: [PATCH 10/10] deps: patch V8 to 7.0.276.28
+
+Refs: https://github.com/v8/v8/compare/7.0.276.25...7.0.276.28
+
+PR-URL: https://github.com/nodejs/node/pull/23424
+Reviewed-By: Anna Henningsen <anna@addaleax.net>
+Reviewed-By: Refael Ackermann <refack@gmail.com>
+Reviewed-By: Colin Ihrig <cjihrig@gmail.com>
+Reviewed-By: Yang Guo <yangguo@chromium.org>
+Reviewed-By: James M Snell <jasnell@gmail.com>
+Reviewed-By: Ali Ijaz Sheikh <ofrobots@google.com>
+---
+ include/v8-version.h                               |  2 +-
+ src/compiler/bytecode-graph-builder.cc             |  2 +-
+ src/compiler/bytecode-graph-builder.h              |  2 +-
+ src/compiler/js-inlining.cc                        |  3 +-
+ src/compiler/js-operator.cc                        |  7 +--
+ src/compiler/js-operator.h                         |  8 +--
+ src/compiler/pipeline.cc                           |  3 +-
+ src/compiler/ppc/instruction-selector-ppc.cc       |  2 +-
+ src/objects/string-inl.h                           |  8 +--
+ src/ppc/macro-assembler-ppc.cc                     |  7 +--
+ src/profiler/cpu-profiler.cc                       | 15 ++++--
+ test/cctest/test-strings.cc                        | 58 ++++++++++++++++++++++
+ .../assembler/turbo-assembler-ppc-unittest.cc      |  6 +++
+ 13 files changed, 96 insertions(+), 27 deletions(-)
+
+diff --git a/include/v8-version.h b/include/v8-version.h
+index 415d17dbbb..5005762818 100644
+--- a/include/v8-version.h
++++ b/include/v8-version.h
+@@ -11,7 +11,7 @@
+ #define V8_MAJOR_VERSION 7
+ #define V8_MINOR_VERSION 0
+ #define V8_BUILD_NUMBER 276
+-#define V8_PATCH_LEVEL 25
++#define V8_PATCH_LEVEL 28
+ 
+ // Use 1 for candidates and 0 otherwise.
+ // (Boolean macro values are not supported by all preprocessors.)
+diff --git a/src/compiler/bytecode-graph-builder.cc b/src/compiler/bytecode-graph-builder.cc
+index bd8b551f4f..5fad7bc920 100644
+--- a/src/compiler/bytecode-graph-builder.cc
++++ b/src/compiler/bytecode-graph-builder.cc
+@@ -516,7 +516,7 @@ Node* BytecodeGraphBuilder::Environment::Checkpoint(
+ BytecodeGraphBuilder::BytecodeGraphBuilder(
+     Zone* local_zone, Handle<SharedFunctionInfo> shared_info,
+     Handle<FeedbackVector> feedback_vector, BailoutId osr_offset,
+-    JSGraph* jsgraph, CallFrequency invocation_frequency,
++    JSGraph* jsgraph, CallFrequency& invocation_frequency,
+     SourcePositionTable* source_positions, Handle<Context> native_context,
+     int inlining_id, JSTypeHintLowering::Flags flags, bool stack_check,
+     bool analyze_environment_liveness)
+diff --git a/src/compiler/bytecode-graph-builder.h b/src/compiler/bytecode-graph-builder.h
+index 57127142de..016134ddbb 100644
+--- a/src/compiler/bytecode-graph-builder.h
++++ b/src/compiler/bytecode-graph-builder.h
+@@ -31,7 +31,7 @@ class BytecodeGraphBuilder {
+   BytecodeGraphBuilder(
+       Zone* local_zone, Handle<SharedFunctionInfo> shared,
+       Handle<FeedbackVector> feedback_vector, BailoutId osr_offset,
+-      JSGraph* jsgraph, CallFrequency invocation_frequency,
++      JSGraph* jsgraph, CallFrequency& invocation_frequency,
+       SourcePositionTable* source_positions, Handle<Context> native_context,
+       int inlining_id = SourcePosition::kNotInlined,
+       JSTypeHintLowering::Flags flags = JSTypeHintLowering::kNoFlags,
+diff --git a/src/compiler/js-inlining.cc b/src/compiler/js-inlining.cc
+index 247e36d5b3..2f31772883 100644
+--- a/src/compiler/js-inlining.cc
++++ b/src/compiler/js-inlining.cc
+@@ -485,9 +485,10 @@ Reduction JSInliner::ReduceJSCall(Node* node) {
+     if (info_->is_bailout_on_uninitialized()) {
+       flags |= JSTypeHintLowering::kBailoutOnUninitialized;
+     }
++    CallFrequency frequency = call.frequency();
+     BytecodeGraphBuilder graph_builder(
+         zone(), shared_info, feedback_vector, BailoutId::None(), jsgraph(),
+-        call.frequency(), source_positions_, native_context(), inlining_id,
++        frequency, source_positions_, native_context(), inlining_id,
+         flags, false, info_->is_analyze_environment_liveness());
+     graph_builder.CreateGraph();
+ 
+diff --git a/src/compiler/js-operator.cc b/src/compiler/js-operator.cc
+index 797814314f..acfc0d3a19 100644
+--- a/src/compiler/js-operator.cc
++++ b/src/compiler/js-operator.cc
+@@ -820,7 +820,8 @@ const Operator* JSOperatorBuilder::CallForwardVarargs(size_t arity,
+       parameters);                                               // parameter
+ }
+ 
+-const Operator* JSOperatorBuilder::Call(size_t arity, CallFrequency frequency,
++const Operator* JSOperatorBuilder::Call(size_t arity,
++                                        CallFrequency const& frequency,
+                                         VectorSlotPair const& feedback,
+                                         ConvertReceiverMode convert_mode,
+                                         SpeculationMode speculation_mode) {
+@@ -844,8 +845,8 @@ const Operator* JSOperatorBuilder::CallWithArrayLike(CallFrequency frequency) {
+ }
+ 
+ const Operator* JSOperatorBuilder::CallWithSpread(
+-    uint32_t arity, CallFrequency frequency, VectorSlotPair const& feedback,
+-    SpeculationMode speculation_mode) {
++    uint32_t arity, CallFrequency const& frequency,
++    VectorSlotPair const& feedback, SpeculationMode speculation_mode) {
+   DCHECK_IMPLIES(speculation_mode == SpeculationMode::kAllowSpeculation,
+                  feedback.IsValid());
+   CallParameters parameters(arity, frequency, feedback,
+diff --git a/src/compiler/js-operator.h b/src/compiler/js-operator.h
+index b10d89cdb9..a81b187c7b 100644
+--- a/src/compiler/js-operator.h
++++ b/src/compiler/js-operator.h
+@@ -160,7 +160,7 @@ CallForwardVarargsParameters const& CallForwardVarargsParametersOf(
+ // used as a parameter by JSCall and JSCallWithSpread operators.
+ class CallParameters final {
+  public:
+-  CallParameters(size_t arity, CallFrequency frequency,
++  CallParameters(size_t arity, CallFrequency const& frequency,
+                  VectorSlotPair const& feedback,
+                  ConvertReceiverMode convert_mode,
+                  SpeculationMode speculation_mode)
+@@ -171,7 +171,7 @@ class CallParameters final {
+         feedback_(feedback) {}
+ 
+   size_t arity() const { return ArityField::decode(bit_field_); }
+-  CallFrequency frequency() const { return frequency_; }
++  CallFrequency const& frequency() const { return frequency_; }
+   ConvertReceiverMode convert_mode() const {
+     return ConvertReceiverModeField::decode(bit_field_);
+   }
+@@ -747,13 +747,13 @@ class V8_EXPORT_PRIVATE JSOperatorBuilder final
+ 
+   const Operator* CallForwardVarargs(size_t arity, uint32_t start_index);
+   const Operator* Call(
+-      size_t arity, CallFrequency frequency = CallFrequency(),
++      size_t arity, CallFrequency const& frequency = CallFrequency(),
+       VectorSlotPair const& feedback = VectorSlotPair(),
+       ConvertReceiverMode convert_mode = ConvertReceiverMode::kAny,
+       SpeculationMode speculation_mode = SpeculationMode::kDisallowSpeculation);
+   const Operator* CallWithArrayLike(CallFrequency frequency);
+   const Operator* CallWithSpread(
+-      uint32_t arity, CallFrequency frequency = CallFrequency(),
++      uint32_t arity, CallFrequency const& frequency = CallFrequency(),
+       VectorSlotPair const& feedback = VectorSlotPair(),
+       SpeculationMode speculation_mode = SpeculationMode::kDisallowSpeculation);
+   const Operator* CallRuntime(Runtime::FunctionId id);
+diff --git a/src/compiler/pipeline.cc b/src/compiler/pipeline.cc
+index 5717c70348..0cc3723594 100644
+--- a/src/compiler/pipeline.cc
++++ b/src/compiler/pipeline.cc
+@@ -1142,10 +1142,11 @@ struct GraphBuilderPhase {
+     if (data->info()->is_bailout_on_uninitialized()) {
+       flags |= JSTypeHintLowering::kBailoutOnUninitialized;
+     }
++    CallFrequency frequency = CallFrequency(1.0f);
+     BytecodeGraphBuilder graph_builder(
+         temp_zone, data->info()->shared_info(),
+         handle(data->info()->closure()->feedback_vector(), data->isolate()),
+-        data->info()->osr_offset(), data->jsgraph(), CallFrequency(1.0f),
++        data->info()->osr_offset(), data->jsgraph(), frequency,
+         data->source_positions(), data->native_context(),
+         SourcePosition::kNotInlined, flags, true,
+         data->info()->is_analyze_environment_liveness());
+diff --git a/src/compiler/ppc/instruction-selector-ppc.cc b/src/compiler/ppc/instruction-selector-ppc.cc
+index 6cb98c4f95..e29ae8c7a5 100644
+--- a/src/compiler/ppc/instruction-selector-ppc.cc
++++ b/src/compiler/ppc/instruction-selector-ppc.cc
+@@ -941,7 +941,7 @@ void InstructionSelector::VisitWord64ReverseBytes(Node* node) {
+   PPCOperandGenerator g(this);
+   InstructionOperand temp[] = {g.TempRegister()};
+   Emit(kPPC_ByteRev64, g.DefineAsRegister(node),
+-       g.UseRegister(node->InputAt(0)), 1, temp);
++       g.UseUniqueRegister(node->InputAt(0)), 1, temp);
+ }
+ 
+ void InstructionSelector::VisitWord32ReverseBytes(Node* node) {
+diff --git a/src/objects/string-inl.h b/src/objects/string-inl.h
+index 1e8eef754f..39f642063e 100644
+--- a/src/objects/string-inl.h
++++ b/src/objects/string-inl.h
+@@ -149,8 +149,8 @@ bool String::IsOneByteRepresentationUnderneath() {
+       return true;
+     case kTwoByteStringTag:
+       return false;
+-    default:  // Cons or sliced string.  Need to go deeper.
+-      return GetUnderlying()->IsOneByteRepresentation();
++    default:  // Cons, sliced, thin, strings need to go deeper.
++      return GetUnderlying()->IsOneByteRepresentationUnderneath();
+   }
+ }
+ 
+@@ -164,8 +164,8 @@ bool String::IsTwoByteRepresentationUnderneath() {
+       return false;
+     case kTwoByteStringTag:
+       return true;
+-    default:  // Cons or sliced string.  Need to go deeper.
+-      return GetUnderlying()->IsTwoByteRepresentation();
++    default:  // Cons, sliced, thin, strings need to go deeper.
++      return GetUnderlying()->IsTwoByteRepresentationUnderneath();
+   }
+ }
+ 
+diff --git a/src/ppc/macro-assembler-ppc.cc b/src/ppc/macro-assembler-ppc.cc
+index 5605907d6f..9ae1e7139a 100644
+--- a/src/ppc/macro-assembler-ppc.cc
++++ b/src/ppc/macro-assembler-ppc.cc
+@@ -1768,11 +1768,8 @@ void TurboAssembler::Abort(AbortReason reason) {
+     // We don't care if we constructed a frame. Just pretend we did.
+     FrameScope assume_frame(this, StackFrame::NONE);
+     mov(r3, Operand(static_cast<int>(reason)));
+-    PrepareCallCFunction(1, 0, r4);
+-    Move(ip, ExternalReference::abort_with_reason());
+-    // Use Call directly to avoid any unneeded overhead. The function won't
+-    // return anyway.
+-    Call(ip);
++    PrepareCallCFunction(1, r4);
++    CallCFunction(ExternalReference::abort_with_reason(), 1);
+     return;
+   }
+ 
+diff --git a/src/profiler/cpu-profiler.cc b/src/profiler/cpu-profiler.cc
+index 555c47f2f4..21d7c9072e 100644
+--- a/src/profiler/cpu-profiler.cc
++++ b/src/profiler/cpu-profiler.cc
+@@ -368,8 +368,11 @@ void CpuProfiler::StartProcessorIfNotStarted() {
+   // Disable logging when using the new implementation.
+   saved_is_logging_ = logger->is_logging_;
+   logger->is_logging_ = false;
++
++  bool codemap_needs_initialization = false;
+   if (!generator_) {
+     generator_.reset(new ProfileGenerator(profiles_.get()));
++    codemap_needs_initialization = true;
+     CreateEntriesForRuntimeCallStats();
+   }
+   processor_.reset(new ProfilerEventsProcessor(isolate_, generator_.get(),
+@@ -382,12 +385,14 @@ void CpuProfiler::StartProcessorIfNotStarted() {
+   isolate_->set_is_profiling(true);
+   // Enumerate stuff we already have in the heap.
+   DCHECK(isolate_->heap()->HasBeenSetUp());
+-  if (!FLAG_prof_browser_mode) {
+-    logger->LogCodeObjects();
++  if (codemap_needs_initialization) {
++    if (!FLAG_prof_browser_mode) {
++      logger->LogCodeObjects();
++    }
++    logger->LogCompiledFunctions();
++    logger->LogAccessorCallbacks();
++    LogBuiltins();
+   }
+-  logger->LogCompiledFunctions();
+-  logger->LogAccessorCallbacks();
+-  LogBuiltins();
+   // Enable stack sampling.
+   processor_->AddCurrentStack(isolate_);
+   processor_->StartSynchronously();
+diff --git a/test/cctest/test-strings.cc b/test/cctest/test-strings.cc
+index 8aa621b1c1..2c66421831 100644
+--- a/test/cctest/test-strings.cc
++++ b/test/cctest/test-strings.cc
+@@ -1693,6 +1693,64 @@ TEST(StringEquals) {
+   CHECK(!bar_str->StringEquals(foo_str2));
+ }
+ 
++class OneByteStringResource : public v8::String::ExternalOneByteStringResource {
++ public:
++  // Takes ownership of |data|.
++  OneByteStringResource(char* data, size_t length)
++      : data_(data), length_(length) {}
++  ~OneByteStringResource() override { delete[] data_; }
++  const char* data() const override { return data_; }
++  size_t length() const override { return length_; }
++
++ private:
++  char* data_;
++  size_t length_;
++};
++
++TEST(Regress876759) {
++  v8::V8::Initialize();
++  Isolate* isolate = CcTest::i_isolate();
++  Factory* factory = isolate->factory();
++
++  HandleScope handle_scope(isolate);
++
++  const int kLength = 30;
++  uc16 two_byte_buf[kLength];
++  char* external_one_byte_buf = new char[kLength];
++  for (int j = 0; j < kLength; j++) {
++    char c = '0' + (j % 10);
++    two_byte_buf[j] = c;
++    external_one_byte_buf[j] = c;
++  }
++
++  Handle<String> parent;
++  {
++    Handle<SeqTwoByteString> raw =
++        factory->NewRawTwoByteString(kLength).ToHandleChecked();
++    CopyChars(raw->GetChars(), two_byte_buf, kLength);
++    parent = raw;
++  }
++  CHECK(parent->IsTwoByteRepresentation());
++  Handle<String> sliced = factory->NewSubString(parent, 1, 20);
++  CHECK(sliced->IsSlicedString());
++  factory->InternalizeString(parent);
++  CHECK(parent->IsThinString());
++  Handle<String> grandparent =
++      handle(ThinString::cast(*parent)->actual(), isolate);
++  CHECK_EQ(*parent, SlicedString::cast(*sliced)->parent());
++  OneByteStringResource* resource =
++      new OneByteStringResource(external_one_byte_buf, kLength);
++  grandparent->MakeExternal(resource);
++  // The grandparent string becomes one-byte, but the child strings are still
++  // two-byte.
++  CHECK(grandparent->IsOneByteRepresentation());
++  CHECK(parent->IsTwoByteRepresentation());
++  CHECK(sliced->IsTwoByteRepresentation());
++  // The *Underneath versions return the correct representation.
++  CHECK(sliced->IsOneByteRepresentationUnderneath());
++  CHECK(!sliced->IsTwoByteRepresentationUnderneath());
++}
++
+ }  // namespace test_strings
+ }  // namespace internal
+ }  // namespace v8
+diff --git a/test/unittests/assembler/turbo-assembler-ppc-unittest.cc b/test/unittests/assembler/turbo-assembler-ppc-unittest.cc
+index 8054eb1da5..dcc138fce1 100644
+--- a/test/unittests/assembler/turbo-assembler-ppc-unittest.cc
++++ b/test/unittests/assembler/turbo-assembler-ppc-unittest.cc
+@@ -25,6 +25,9 @@ TEST_F(TurboAssemblerTest, TestHardAbort) {
+   byte* buffer = AllocateAssemblerBuffer(&allocated);
+   TurboAssembler tasm(nullptr, AssemblerOptions{}, buffer,
+                       static_cast<int>(allocated), CodeObjectRequired::kNo);
++  // Called from C
++  __ function_descriptor();
++
+   __ set_abort_hard(true);
+ 
+   __ Abort(AbortReason::kNoReason);
+@@ -43,6 +46,9 @@ TEST_F(TurboAssemblerTest, TestCheck) {
+   byte* buffer = AllocateAssemblerBuffer(&allocated);
+   TurboAssembler tasm(nullptr, AssemblerOptions{}, buffer,
+                       static_cast<int>(allocated), CodeObjectRequired::kNo);
++  // Called from C
++  __ function_descriptor();
++
+   __ set_abort_hard(true);
+ 
+   // Fail if the first parameter is 17.
+-- 
+2.16.1
+

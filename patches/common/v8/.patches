@@ -10,3 +10,4 @@ dcheck.patch
 disable-warning-win.patch
 expose_mksnapshot.patch
 build-torque-with-x64-toolchain-on-arm.patch
+deps_float_node_v11.0.0_patches.patch
